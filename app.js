@@ -1,4 +1,5 @@
 import { WORD_DECK } from './word-deck.mjs';
+import { EXPLORATION_NOTICE } from './dialogue-copy.mjs';
 'use strict';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -201,8 +202,8 @@ function renderSession() {
   $('#card-id').textContent = cardID(n);
   $('#active-card-image').src = cardURL(n);
   $('#active-card-image').alt = `本轮第 ${position} 张图卡 ${cardID(n)}`;
-  const hasExpression = state.turns.some(t => t.card === n && t.role === 'user');
-  $('.card-stage').classList.toggle('compact', hasExpression);
+  // Keep the image readable throughout the conversation, including after word pairing.
+  $('.card-stage').classList.remove('compact');
   $('#card-strip').innerHTML = state.cards.map((c, i) => `<button class="card-thumb ${c === n ? 'active' : ''}" data-action="select-card" data-card="${c}" aria-pressed="${c === n}"><img src="${cardURL(c)}" alt="">第 ${i+1} 张${state.pairings[c]?.status==='paired'?` · ${escapeHTML(wordFor(c).text)}`:''}</button>`).join('');
   const cardTurns=state.turns.filter(t => t.card === n);
   const latest=cardTurns.at(-1);
@@ -249,6 +250,13 @@ function openCardZoom(card,wordId=null) {
   $('#zoom-caption').textContent=`${cardID(card)}${word?` · ${word.text}`:''} · 等比例展示`;
   $('#image-dialog').showModal();
 }
+// Preserve the question field; only arrange the visible answer and its optional note.
+function formatAssistantReply(message, question = null) {
+  const hasNotice = message.includes(EXPLORATION_NOTICE);
+  let answer = message.replaceAll(`（${EXPLORATION_NOTICE}）`, '').replaceAll(EXPLORATION_NOTICE, '').replace(/\n{3,}/g, '\n\n').trim();
+  if (question && !answer.includes(question)) answer += '\n\n' + question;
+  return answer + (hasNotice ? `\n\n（${EXPLORATION_NOTICE}）` : '');
+}
 function renderTurn(turn) {
   const assistant = turn.role === 'assistant';
   const candidates = turn.usedRules?.length ? turn.usedRules : [{line:turn.ruleLine || 29,name:turn.ruleName || '提问与解释规则'}];
@@ -259,7 +267,7 @@ function renderTurn(turn) {
     <li>参考规则：${rules.map(r=>`<a href="skill/#L${r.line}" target="_blank" rel="noopener" title="查看 Skill 第 ${r.line} 行原文">${escapeHTML(r.name)} ↗</a>`).join('、')}</li>
     <li>具体应用：${escapeHTML(application)}</li>
   </ul></details>` : '';
-  return `<article class="message ${assistant ? 'assistant' : 'user'}">${assistant ? '' : `<div class="message-meta"><span>你</span><span>${cardID(turn.card)}</span></div>`}<p>${escapeHTML(turn.text)}</p>${rationale}</article>`;
+  return `<article class="message ${assistant ? 'assistant' : 'user'}">${assistant ? '' : `<div class="message-meta"><span>你</span><span>${cardID(turn.card)}</span></div>`}<p>${escapeHTML(assistant ? formatAssistantReply(turn.text) : turn.text)}</p>${rationale}</article>`;
 }
 
 const exampleTurns = [
@@ -385,8 +393,7 @@ async function startLiveReply(card) {
     let data;try { data=await response.json(); } catch { throw new Error('AI 返回的信息不完整，请稍后重试。'); }
     if (!response.ok) { if(response.status===401)visitorSessionPromise=null;throw new Error(data.error?.message||'AI 暂时没有回应，请稍后重试。'); }
     if(state!==round||round.status!=='active'||round.revisions[card]!==revision||data.session_id!==round.id||data.input_revision!==revision||data.request_id!==requestId)return;
-    let answer=data.message;
-    if(data.question&&!answer.includes(data.question))answer+='\n\n'+data.question;
+    const answer=formatAssistantReply(data.message,data.question);
     const rule=data.rules?.[0],claim=data.claims?.[0];
     round.turns.push({id:crypto.randomUUID(),role:'assistant',text:answer,card,reply_to:lastUser.id,reply_action:data.next_action,word_transition:data.word_transition,image_transition:data.image_transition,review_transition:data.review_transition,other_feelings_invitation:data.other_feelings_invitation,basic_answers:data.basic_answers,word_context:wordContext(card),at:new Date().toISOString(),origin:'DeepSeek 实时回应',question:data.question,
       quotes:data.evidence.map(e=>e.quote),basis:data.basis,ruleLine:rule?.line||53,ruleName:rule?.name||'围绕原话回应',
