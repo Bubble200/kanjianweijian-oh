@@ -1,0 +1,643 @@
+{
+  "title": "OH 中文字卡四边文字清晰阅读版",
+  "source": "https://github.com/lastxuan4396/ohcard",
+  "sourceCommit": "7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447",
+  "scope": "Simplified-Chinese re-typeset reading aid; not an original scan or an authenticated official edition. Source scans retained for comparison. Existing Skill not modified.",
+  "layout_measurement": {
+    "source_scans": 88,
+    "canvas": [
+      1045,
+      1312
+    ],
+    "median_red_frame_box": [
+      136,
+      130,
+      907.5,
+      1194.5
+    ],
+    "normalized_frame": [
+      136,
+      130,
+      772,
+      1065
+    ]
+  },
+  "cards": [
+    {
+      "id": "OW-001",
+      "word_simplified": "感情",
+      "source_file": "cards/oh-word/89感情.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/89%E6%84%9F%E6%83%85.jpg",
+      "svg": "ow-001.svg"
+    },
+    {
+      "id": "OW-002",
+      "word_simplified": "孤独",
+      "source_file": "cards/oh-word/90孤独.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/90%E5%AD%A4%E7%8B%AC.jpg",
+      "svg": "ow-002.svg"
+    },
+    {
+      "id": "OW-003",
+      "word_simplified": "生气",
+      "source_file": "cards/oh-word/91生气.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/91%E7%94%9F%E6%B0%94.jpg",
+      "svg": "ow-003.svg"
+    },
+    {
+      "id": "OW-004",
+      "word_simplified": "焦虑",
+      "source_file": "cards/oh-word/92焦虑.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/92%E7%84%A6%E8%99%91.jpg",
+      "svg": "ow-004.svg"
+    },
+    {
+      "id": "OW-005",
+      "word_simplified": "道歉",
+      "source_file": "cards/oh-word/93道歉.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/93%E9%81%93%E6%AD%89.jpg",
+      "svg": "ow-005.svg"
+    },
+    {
+      "id": "OW-006",
+      "word_simplified": "外表",
+      "source_file": "cards/oh-word/94外表.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/94%E5%A4%96%E8%A1%A8.jpg",
+      "svg": "ow-006.svg"
+    },
+    {
+      "id": "OW-007",
+      "word_simplified": "攻击",
+      "source_file": "cards/oh-word/95攻击.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/95%E6%94%BB%E5%87%BB.jpg",
+      "svg": "ow-007.svg"
+    },
+    {
+      "id": "OW-008",
+      "word_simplified": "吸引",
+      "source_file": "cards/oh-word/96吸引.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/96%E5%90%B8%E5%BC%95.jpg",
+      "svg": "ow-008.svg"
+    },
+    {
+      "id": "OW-009",
+      "word_simplified": "开始",
+      "source_file": "cards/oh-word/97开始.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/97%E5%BC%80%E5%A7%8B.jpg",
+      "svg": "ow-009.svg"
+    },
+    {
+      "id": "OW-010",
+      "word_simplified": "夸赞",
+      "source_file": "cards/oh-word/98夸赞.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/98%E5%A4%B8%E8%B5%9E.jpg",
+      "svg": "ow-010.svg"
+    },
+    {
+      "id": "OW-011",
+      "word_simplified": "厌烦",
+      "source_file": "cards/oh-word/99厌烦.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/99%E5%8E%8C%E7%83%A6.jpg",
+      "svg": "ow-011.svg"
+    },
+    {
+      "id": "OW-012",
+      "word_simplified": "上司",
+      "source_file": "cards/oh-word/100上司.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/100%E4%B8%8A%E5%8F%B8.jpg",
+      "svg": "ow-012.svg"
+    },
+    {
+      "id": "OW-013",
+      "word_simplified": "改变",
+      "source_file": "cards/oh-word/101改变.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/101%E6%94%B9%E5%8F%98.jpg",
+      "svg": "ow-013.svg"
+    },
+    {
+      "id": "OW-014",
+      "word_simplified": "孩童",
+      "source_file": "cards/oh-word/102孩童.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/102%E5%AD%A9%E7%AB%A5.jpg",
+      "svg": "ow-014.svg"
+    },
+    {
+      "id": "OW-015",
+      "word_simplified": "诙谐",
+      "source_file": "cards/oh-word/103诙谐.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/103%E8%AF%99%E8%B0%90.jpg",
+      "svg": "ow-015.svg"
+    },
+    {
+      "id": "OW-016",
+      "word_simplified": "强迫",
+      "source_file": "cards/oh-word/104强迫.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/104%E5%BC%BA%E8%BF%AB.jpg",
+      "svg": "ow-016.svg"
+    },
+    {
+      "id": "OW-017",
+      "word_simplified": "顺应",
+      "source_file": "cards/oh-word/105顺应.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/105%E9%A1%BA%E5%BA%94.jpg",
+      "svg": "ow-017.svg"
+    },
+    {
+      "id": "OW-018",
+      "word_simplified": "混乱",
+      "source_file": "cards/oh-word/106混乱.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/106%E6%B7%B7%E4%B9%B1.jpg",
+      "svg": "ow-018.svg"
+    },
+    {
+      "id": "OW-019",
+      "word_simplified": "循环",
+      "source_file": "cards/oh-word/107循环.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/107%E5%BE%AA%E7%8E%AF.jpg",
+      "svg": "ow-019.svg"
+    },
+    {
+      "id": "OW-020",
+      "word_simplified": "危险",
+      "source_file": "cards/oh-word/108危险.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/108%E5%8D%B1%E9%99%A9.jpg",
+      "svg": "ow-020.svg"
+    },
+    {
+      "id": "OW-021",
+      "word_simplified": "依赖",
+      "source_file": "cards/oh-word/109依赖.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/109%E4%BE%9D%E8%B5%96.jpg",
+      "svg": "ow-021.svg"
+    },
+    {
+      "id": "OW-022",
+      "word_simplified": "破坏",
+      "source_file": "cards/oh-word/110破坏.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/110%E7%A0%B4%E5%9D%8F.jpg",
+      "svg": "ow-022.svg"
+    },
+    {
+      "id": "OW-023",
+      "word_simplified": "丢脸",
+      "source_file": "cards/oh-word/111丢脸.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/111%E4%B8%A2%E8%84%B8.jpg",
+      "svg": "ow-023.svg"
+    },
+    {
+      "id": "OW-024",
+      "word_simplified": "不喜欢",
+      "source_file": "cards/oh-word/112不喜欢.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/112%E4%B8%8D%E5%96%9C%E6%AC%A2.jpg",
+      "svg": "ow-024.svg"
+    },
+    {
+      "id": "OW-025",
+      "word_simplified": "梦想",
+      "source_file": "cards/oh-word/113梦想.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/113%E6%A2%A6%E6%83%B3.jpg",
+      "svg": "ow-025.svg"
+    },
+    {
+      "id": "OW-026",
+      "word_simplified": "消除",
+      "source_file": "cards/oh-word/114消除.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/114%E6%B6%88%E9%99%A4.jpg",
+      "svg": "ow-026.svg"
+    },
+    {
+      "id": "OW-027",
+      "word_simplified": "尴尬",
+      "source_file": "cards/oh-word/115尴尬.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/115%E5%B0%B4%E5%B0%AC.jpg",
+      "svg": "ow-027.svg"
+    },
+    {
+      "id": "OW-028",
+      "word_simplified": "色情",
+      "source_file": "cards/oh-word/116色情.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/116%E8%89%B2%E6%83%85.jpg",
+      "svg": "ow-028.svg"
+    },
+    {
+      "id": "OW-029",
+      "word_simplified": "专家",
+      "source_file": "cards/oh-word/117专家.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/117%E4%B8%93%E5%AE%B6.jpg",
+      "svg": "ow-029.svg"
+    },
+    {
+      "id": "OW-030",
+      "word_simplified": "失败",
+      "source_file": "cards/oh-word/118失败.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/118%E5%A4%B1%E8%B4%A5.jpg",
+      "svg": "ow-030.svg"
+    },
+    {
+      "id": "OW-031",
+      "word_simplified": "幻想",
+      "source_file": "cards/oh-word/119幻想.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/119%E5%B9%BB%E6%83%B3.jpg",
+      "svg": "ow-031.svg"
+    },
+    {
+      "id": "OW-032",
+      "word_simplified": "父亲",
+      "source_file": "cards/oh-word/120父亲.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/120%E7%88%B6%E4%BA%B2.jpg",
+      "svg": "ow-032.svg"
+    },
+    {
+      "id": "OW-033",
+      "word_simplified": "恐惧",
+      "source_file": "cards/oh-word/121恐惧.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/121%E6%81%90%E6%83%A7.jpg",
+      "svg": "ow-033.svg"
+    },
+    {
+      "id": "OW-034",
+      "word_simplified": "坚定",
+      "source_file": "cards/oh-word/122坚定.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/122%E5%9D%9A%E5%AE%9A.jpg",
+      "svg": "ow-034.svg"
+    },
+    {
+      "id": "OW-035",
+      "word_simplified": "游戏",
+      "source_file": "cards/oh-word/123游戏.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/123%E6%B8%B8%E6%88%8F.jpg",
+      "svg": "ow-035.svg"
+    },
+    {
+      "id": "OW-036",
+      "word_simplified": "付出",
+      "source_file": "cards/oh-word/124付出.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/124%E4%BB%98%E5%87%BA.jpg",
+      "svg": "ow-036.svg"
+    },
+    {
+      "id": "OW-037",
+      "word_simplified": "前进",
+      "source_file": "cards/oh-word/125前进.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/125%E5%89%8D%E8%BF%9B.jpg",
+      "svg": "ow-037.svg"
+    },
+    {
+      "id": "OW-038",
+      "word_simplified": "哀伤",
+      "source_file": "cards/oh-word/126哀伤.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/126%E5%93%80%E4%BC%A4.jpg",
+      "svg": "ow-038.svg"
+    },
+    {
+      "id": "OW-039",
+      "word_simplified": "罪恶感",
+      "source_file": "cards/oh-word/127罪恶感.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/127%E7%BD%AA%E6%81%B6%E6%84%9F.jpg",
+      "svg": "ow-039.svg"
+    },
+    {
+      "id": "OW-040",
+      "word_simplified": "习惯",
+      "source_file": "cards/oh-word/128习惯.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/128%E4%B9%A0%E6%83%AF.jpg",
+      "svg": "ow-040.svg"
+    },
+    {
+      "id": "OW-041",
+      "word_simplified": "憎恨",
+      "source_file": "cards/oh-word/129憎恨.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/129%E6%86%8E%E6%81%A8.jpg",
+      "svg": "ow-041.svg"
+    },
+    {
+      "id": "OW-042",
+      "word_simplified": "犹豫",
+      "source_file": "cards/oh-word/130犹豫.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/130%E7%8A%B9%E8%B1%AB.jpg",
+      "svg": "ow-042.svg"
+    },
+    {
+      "id": "OW-043",
+      "word_simplified": "躲藏",
+      "source_file": "cards/oh-word/131躲藏.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/131%E8%BA%B2%E8%97%8F.jpg",
+      "svg": "ow-043.svg"
+    },
+    {
+      "id": "OW-044",
+      "word_simplified": "执着",
+      "source_file": "cards/oh-word/132执着.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/132%E6%89%A7%E7%9D%80.jpg",
+      "svg": "ow-044.svg"
+    },
+    {
+      "id": "OW-045",
+      "word_simplified": "家",
+      "source_file": "cards/oh-word/133家.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/133%E5%AE%B6.jpg",
+      "svg": "ow-045.svg"
+    },
+    {
+      "id": "OW-046",
+      "word_simplified": "同性恋",
+      "source_file": "cards/oh-word/134同性恋.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/134%E5%90%8C%E6%80%A7%E6%81%8B.jpg",
+      "svg": "ow-046.svg"
+    },
+    {
+      "id": "OW-047",
+      "word_simplified": "希望",
+      "source_file": "cards/oh-word/135希望.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/135%E5%B8%8C%E6%9C%9B.jpg",
+      "svg": "ow-047.svg"
+    },
+    {
+      "id": "OW-048",
+      "word_simplified": "羞辱",
+      "source_file": "cards/oh-word/136羞辱.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/136%E7%BE%9E%E8%BE%B1.jpg",
+      "svg": "ow-048.svg"
+    },
+    {
+      "id": "OW-049",
+      "word_simplified": "喜悦",
+      "source_file": "cards/oh-word/137喜悦.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/137%E5%96%9C%E6%82%A6.jpg",
+      "svg": "ow-049.svg"
+    },
+    {
+      "id": "OW-050",
+      "word_simplified": "恐吓",
+      "source_file": "cards/oh-word/138恐吓.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/138%E6%81%90%E5%90%93.jpg",
+      "svg": "ow-050.svg"
+    },
+    {
+      "id": "OW-051",
+      "word_simplified": "欢笑",
+      "source_file": "cards/oh-word/139欢笑.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/139%E6%AC%A2%E7%AC%91.jpg",
+      "svg": "ow-051.svg"
+    },
+    {
+      "id": "OW-052",
+      "word_simplified": "放开",
+      "source_file": "cards/oh-word/140放开.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/140%E6%94%BE%E5%BC%80.jpg",
+      "svg": "ow-052.svg"
+    },
+    {
+      "id": "OW-053",
+      "word_simplified": "男性",
+      "source_file": "cards/oh-word/142男性.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/142%E7%94%B7%E6%80%A7.jpg",
+      "svg": "ow-053.svg"
+    },
+    {
+      "id": "OW-054",
+      "word_simplified": "母亲",
+      "source_file": "cards/oh-word/143母亲.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/143%E6%AF%8D%E4%BA%B2.jpg",
+      "svg": "ow-054.svg"
+    },
+    {
+      "id": "OW-055",
+      "word_simplified": "谎言",
+      "source_file": "cards/oh-word/143谎言.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/143%E8%B0%8E%E8%A8%80.jpg",
+      "svg": "ow-055.svg"
+    },
+    {
+      "id": "OW-056",
+      "word_simplified": "裸体",
+      "source_file": "cards/oh-word/144裸体.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/144%E8%A3%B8%E4%BD%93.jpg",
+      "svg": "ow-056.svg"
+    },
+    {
+      "id": "OW-057",
+      "word_simplified": "亏欠",
+      "source_file": "cards/oh-word/145亏欠.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/145%E4%BA%8F%E6%AC%A0.jpg",
+      "svg": "ow-057.svg"
+    },
+    {
+      "id": "OW-058",
+      "word_simplified": "痛苦",
+      "source_file": "cards/oh-word/146痛苦.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/146%E7%97%9B%E8%8B%A6.jpg",
+      "svg": "ow-058.svg"
+    },
+    {
+      "id": "OW-059",
+      "word_simplified": "姿态",
+      "source_file": "cards/oh-word/147姿态.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/147%E5%A7%BF%E6%80%81.jpg",
+      "svg": "ow-059.svg"
+    },
+    {
+      "id": "OW-060",
+      "word_simplified": "权利游戏",
+      "source_file": "cards/oh-word/148权利游戏.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/148%E6%9D%83%E5%88%A9%E6%B8%B8%E6%88%8F.jpg",
+      "svg": "ow-060.svg"
+    },
+    {
+      "id": "OW-061",
+      "word_simplified": "憎恶",
+      "source_file": "cards/oh-word/149憎恶.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/149%E6%86%8E%E6%81%B6.jpg",
+      "svg": "ow-061.svg"
+    },
+    {
+      "id": "OW-062",
+      "word_simplified": "抗拒",
+      "source_file": "cards/oh-word/150抗拒.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/150%E6%8A%97%E6%8B%92.jpg",
+      "svg": "ow-062.svg"
+    },
+    {
+      "id": "OW-063",
+      "word_simplified": "退省",
+      "source_file": "cards/oh-word/151退省.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/151%E9%80%80%E7%9C%81.jpg",
+      "svg": "ow-063.svg"
+    },
+    {
+      "id": "OW-064",
+      "word_simplified": "固执",
+      "source_file": "cards/oh-word/152固执.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/152%E5%9B%BA%E6%89%A7.jpg",
+      "svg": "ow-064.svg"
+    },
+    {
+      "id": "OW-065",
+      "word_simplified": "敌对",
+      "source_file": "cards/oh-word/153敌对.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/153%E6%95%8C%E5%AF%B9.jpg",
+      "svg": "ow-065.svg"
+    },
+    {
+      "id": "OW-066",
+      "word_simplified": "腐朽",
+      "source_file": "cards/oh-word/154腐朽.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/154%E8%85%90%E6%9C%BD.jpg",
+      "svg": "ow-066.svg"
+    },
+    {
+      "id": "OW-067",
+      "word_simplified": "弄巧成拙",
+      "source_file": "cards/oh-word/155弄巧成拙.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/155%E5%BC%84%E5%B7%A7%E6%88%90%E6%8B%99.jpg",
+      "svg": "ow-067.svg"
+    },
+    {
+      "id": "OW-068",
+      "word_simplified": "羞愧",
+      "source_file": "cards/oh-word/156羞愧.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/156%E7%BE%9E%E6%84%A7.jpg",
+      "svg": "ow-068.svg"
+    },
+    {
+      "id": "OW-069",
+      "word_simplified": "分享",
+      "source_file": "cards/oh-word/157分享.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/157%E5%88%86%E4%BA%AB.jpg",
+      "svg": "ow-069.svg"
+    },
+    {
+      "id": "OW-070",
+      "word_simplified": "应该",
+      "source_file": "cards/oh-word/158应该.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/158%E5%BA%94%E8%AF%A5.jpg",
+      "svg": "ow-070.svg"
+    },
+    {
+      "id": "OW-071",
+      "word_simplified": "奴隶",
+      "source_file": "cards/oh-word/159奴隶.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/159%E5%A5%B4%E9%9A%B6.jpg",
+      "svg": "ow-071.svg"
+    },
+    {
+      "id": "OW-072",
+      "word_simplified": "停止",
+      "source_file": "cards/oh-word/160停止.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/160%E5%81%9C%E6%AD%A2.jpg",
+      "svg": "ow-072.svg"
+    },
+    {
+      "id": "OW-073",
+      "word_simplified": "陌生人",
+      "source_file": "cards/oh-word/161陌生人.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/161%E9%99%8C%E7%94%9F%E4%BA%BA.jpg",
+      "svg": "ow-073.svg"
+    },
+    {
+      "id": "OW-074",
+      "word_simplified": "愚蠢",
+      "source_file": "cards/oh-word/162愚蠢.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/162%E6%84%9A%E8%A0%A2.jpg",
+      "svg": "ow-074.svg"
+    },
+    {
+      "id": "OW-075",
+      "word_simplified": "成功",
+      "source_file": "cards/oh-word/163成功.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/163%E6%88%90%E5%8A%9F.jpg",
+      "svg": "ow-075.svg"
+    },
+    {
+      "id": "OW-076",
+      "word_simplified": "压抑",
+      "source_file": "cards/oh-word/164压抑.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/164%E5%8E%8B%E6%8A%91.jpg",
+      "svg": "ow-076.svg"
+    },
+    {
+      "id": "OW-077",
+      "word_simplified": "掠夺",
+      "source_file": "cards/oh-word/165掠夺.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/165%E6%8E%A0%E5%A4%BA.jpg",
+      "svg": "ow-077.svg"
+    },
+    {
+      "id": "OW-078",
+      "word_simplified": "威胁",
+      "source_file": "cards/oh-word/166威胁.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/166%E5%A8%81%E8%83%81.jpg",
+      "svg": "ow-078.svg"
+    },
+    {
+      "id": "OW-079",
+      "word_simplified": "丑陋",
+      "source_file": "cards/oh-word/167丑陋.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/167%E4%B8%91%E9%99%8B.jpg",
+      "svg": "ow-079.svg"
+    },
+    {
+      "id": "OW-080",
+      "word_simplified": "受害者",
+      "source_file": "cards/oh-word/168受害者.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/168%E5%8F%97%E5%AE%B3%E8%80%85.jpg",
+      "svg": "ow-080.svg"
+    },
+    {
+      "id": "OW-081",
+      "word_simplified": "违背",
+      "source_file": "cards/oh-word/169违背.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/169%E8%BF%9D%E8%83%8C.jpg",
+      "svg": "ow-081.svg"
+    },
+    {
+      "id": "OW-082",
+      "word_simplified": "等候",
+      "source_file": "cards/oh-word/170等候.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/170%E7%AD%89%E5%80%99.jpg",
+      "svg": "ow-082.svg"
+    },
+    {
+      "id": "OW-083",
+      "word_simplified": "疲惫",
+      "source_file": "cards/oh-word/171疲惫.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/171%E7%96%B2%E6%83%AB.jpg",
+      "svg": "ow-083.svg"
+    },
+    {
+      "id": "OW-084",
+      "word_simplified": "聪明",
+      "source_file": "cards/oh-word/172聪明.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/172%E8%81%AA%E6%98%8E.jpg",
+      "svg": "ow-084.svg"
+    },
+    {
+      "id": "OW-085",
+      "word_simplified": "女人",
+      "source_file": "cards/oh-word/173女人.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/173%E5%A5%B3%E4%BA%BA.jpg",
+      "svg": "ow-085.svg"
+    },
+    {
+      "id": "OW-086",
+      "word_simplified": "奇妙",
+      "source_file": "cards/oh-word/174奇妙.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/174%E5%A5%87%E5%A6%99.jpg",
+      "svg": "ow-086.svg"
+    },
+    {
+      "id": "OW-087",
+      "word_simplified": "错误",
+      "source_file": "cards/oh-word/175错误.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/175%E9%94%99%E8%AF%AF.jpg",
+      "svg": "ow-087.svg"
+    },
+    {
+      "id": "OW-088",
+      "word_simplified": "爱情",
+      "source_file": "cards/oh-word/176爱情.jpg",
+      "source_url": "https://raw.githubusercontent.com/lastxuan4396/ohcard/7ff3fd63f2496f76af0a8e1721d4cde2b9dc3447/cards/oh-word/176%E7%88%B1%E6%83%85.jpg",
+      "svg": "ow-088.svg"
+    }
+  ]
+}

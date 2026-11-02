@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="看见未见 OH 卡：从一张图开始，用自己的话探索。用自己的话探索。">
+  <title>看见未见 · OH卡</title>
+  <link rel="icon" type="image/svg+xml" href="assets/logo-oh-pages-15deg-v2.svg">
+  <link rel="stylesheet" href="styles.css">
+<script>window.OH_RUNTIME={liveAI:true};</script></head>
+<body>
+<!-- Independent image/word decks. Private dialogue is saved only by visitor choice. -->
+<svg class="icon-defs" xmlns="http://www.w3.org/2000/svg"><defs>
+ <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+ <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+ <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+ <symbol id="i-memory" viewBox="0 0 24 24"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h4"/></symbol>
+ <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5m6 0h5v5M4 15v5h5m6 0h5v-5"/></symbol>
+ <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5m6-6-6 6 6 6"/></symbol>
+ <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19c1-6 5-10 13-13m0 0c2 9-1 14-7 14-6 0-8-5-6-9 2-4 7-5 13-5Z"/></symbol>
+</defs></svg>
+<header class="site-header">
+ <button class="brand" data-action="home" aria-label="看见未见首页"><img class="brand-mark" src="assets/logo-oh-pages-15deg-v2.svg" alt="" width="62" height="52"><span>看见未见<small>OH CARDS</small></span></button>
+ <nav aria-label="主导航"><button class="text-button" data-action="how">怎么玩</button><button class="memory-button" data-action="memory"><svg><use href="#i-memory"/></svg>我的记忆<span id="memory-count" hidden></span></button></nav>
+</header>
+<main id="home-view" class="view home-view">
+ <div class="home-copy"><p class="eyebrow"><span></span>给自己一点不着急的时间</p><h1>从一张图开始，<br>聊聊最近的<span class="serif-accent">自己。</span></h1><p class="intro">图里没有标准答案。<br>你看见的、想到的，都可以从这里说起。</p><div class="hero-actions"><button id="home-start" class="primary" data-action="start">抽一张，开始聊<svg><use href="#i-arrow"/></svg></button><button class="example-link" data-action="example">先看看怎么玩 <span>↗</span></button></div><p class="small-caption">一轮 1–3 组图字卡 · 也可以只看图</p></div>
+ <div class="card-composition" aria-label="OH 图卡预览"><span class="orbit-label">每次看见，都可以不同。</span><figure class="fan-card fan-back-one"><img src="cards/oh-012.jpg" alt="图卡预览十二" draggable="false"></figure><figure class="fan-card fan-back-two"><img src="cards/oh-064.jpg" alt="图卡预览六十四" draggable="false"></figure><figure class="fan-card fan-front"><img src="cards/oh-025.jpg" alt="两位正在跑步的男孩，OH 图卡二十五" draggable="false"><figcaption><span>一张卡，一种此刻的看法。</span><span>025</span></figcaption></figure><div class="composition-note"><span>LOOK A LITTLE CLOSER</span><i></i></div></div>
+ <div class="home-bottom"><p><span>01</span> 看一张图</p><i></i><p><span>02</span> 聊一聊你</p><i></i><p><span>03</span> 留点发现</p></div>
+</main>
+<main id="session-view" class="view session-view" hidden>
+ <div class="session-heading"><button class="quiet-back" data-action="leave"><svg><use href="#i-back"/></svg>返回</button><div><span class="session-kicker">自由探索</span><h1>说说你眼中的这张卡</h1></div><button class="text-button end-button" data-action="review">结束并回顾</button></div>
+ <div class="session-layout"><section class="explore-main" aria-label="卡片与对话">
+   <div class="card-stage"><div class="card-topline"><span id="card-position">第 1 张图卡</span><span id="card-id"></span></div><div id="card-pair" class="card-pair"><img id="word-frame" class="word-frame" alt="" hidden><button id="card-zoom" class="current-card" data-action="zoom" aria-label="放大当前图卡"><img id="active-card-image" alt="本轮图卡"><span class="zoom-hint"><svg><use href="#i-expand"/></svg>放大看</span></button></div><div id="card-strip" class="card-strip" aria-label="本轮已抽图卡"></div></div>
+   <div id="word-status" class="word-status" aria-live="polite" hidden></div>
+   <div id="messages" class="messages" aria-live="polite"></div>
+   <div id="example-controls" class="example-controls" hidden><span>正在查看虚构对话示例</span><button class="small-primary" data-action="next-example">继续看示例 <svg><use href="#i-arrow"/></svg></button></div>
+   <section id="word-step" class="word-step" aria-labelledby="word-title" hidden><header class="deck-heading"><div><p class="eyebrow">ANOTHER VIEW</p><h2 id="word-title">给这张图，抽一个词。</h2><p id="word-theme" class="word-theme"></p><p id="word-hint" class="deck-hint">88 张字卡，慢慢挑。</p></div></header><div id="word-grid" class="deck-grid" aria-label="叠放的全部 88 张字卡牌背"></div><footer class="deck-footer"><button class="text-button" data-action="skip-word">继续只看图卡</button><strong id="word-count"></strong></footer></section>
+   <form id="message-form" class="composer"><label for="message-input" class="sr-only">你的联想</label><textarea id="message-input" placeholder="写下你注意到的，或此刻的感受……" rows="2" maxlength="3000"></textarea><div class="composer-bottom"><span>随便说说，也可以慢慢想。</span><button type="submit" aria-label="发送你的联想">发送<svg><use href="#i-arrow"/></svg></button></div></form>
+ </section><aside class="draw-rail" aria-label="继续抽卡"><div class="rail-inner"><div class="tiny-stack" aria-hidden="true"><i></i><i></i><i></i></div><p class="rail-kicker">让联想继续</p><button id="draw-next" class="draw-next" data-action="draw"><svg><use href="#i-plus"/></svg><strong>再抽一张</strong><span id="draw-target">第 2 / 3 张</span></button><p id="draw-note">不用等聊完，<br>想抽就可以抽。</p><span class="rail-line"></span><button class="text-button rail-review" data-action="review">先回顾这一轮 ↗</button></div></aside></div>
+</main>
+<main id="review-view" class="view review-view" hidden></main>
+<footer class="site-footer"><span>看见未见 · 用你自己的话，看见此刻。</span><span>自由探索 <i></i> <button data-action="about">关于这个版本</button></span></footer>
+<dialog id="memory-dialog" class="drawer"><div class="drawer-head"><div><p class="eyebrow">YOUR NOTES</p><h2>记得你说过的话</h2></div><button class="icon-button" data-action="close-dialog" aria-label="关闭记忆"><svg><use href="#i-close"/></svg></button></div><div class="memory-tabs" role="tablist"><button role="tab" aria-selected="true" data-action="memory-tab" data-tab="round">本轮记录</button><button role="tab" aria-selected="false" data-action="memory-tab" data-tab="long">下次可参考</button><button role="tab" aria-selected="false" data-action="memory-tab" data-tab="saved">已保存的回顾</button></div><div id="memory-body" class="drawer-body"></div><p class="drawer-footer">记忆与回顾保存在这个浏览器，不跨设备同步。AI 对话会将本轮内容交给 DeepSeek 处理。</p></dialog>
+<dialog id="info-dialog" class="info-dialog"><button class="icon-button dialog-close" data-action="close-dialog" aria-label="关闭"><svg><use href="#i-close"/></svg></button><div id="info-content"></div></dialog>
+<dialog id="image-dialog" class="image-dialog"><button class="icon-button dialog-close" data-action="close-dialog" aria-label="关闭大图"><svg><use href="#i-close"/></svg></button><div class="zoom-pair"><img id="zoom-word" class="zoom-word" alt="" hidden><img id="zoom-image" alt="当前图卡原图"></div><p id="zoom-caption"></p></dialog>
+<dialog id="deck-dialog" class="deck-dialog" aria-labelledby="deck-title"><header class="deck-heading"><div><p class="eyebrow">CHOOSE YOUR CARD</p><h2 id="deck-title">从牌叠里，选一张。</h2><p id="deck-hint" class="deck-hint">88 张牌，慢慢挑。</p></div><button class="icon-button" data-action="close-dialog" aria-label="暂不选牌"><svg><use href="#i-close"/></svg></button></header><div id="deck-grid" class="deck-grid" aria-label="叠放的全部 88 张牌背，每张露出一部分"></div><footer class="deck-footer"><strong id="deck-count">已抽 0 / 3 张</strong></footer></dialog>
+
+<div id="toast" class="toast" role="status" hidden></div>
+<script>window.OH_RUNTIME={liveAI:true,apiBase:"https://arpyrhxpsgpuzxoxsodd.supabase.co/functions/v1/oh-backup"};</script>
+<script type="module" src="app.js"></script>
+</body></html>
