@@ -142,7 +142,6 @@ function openWordDeck() {
   state.peekWordPosition=null;
   $('#word-title').textContent=`给第 ${state.cards.indexOf(state.activeCard)+1} 张图，抽一个词。`;
   $('#word-hint').textContent=matchMedia('(hover: none)').matches ? '88 张字卡，轻点抬起，再点一次选中。' : '88 张字卡，慢慢挑。';
-  $('#word-theme').textContent=state.pairings[state.activeCard].transition?.theme ? `刚才聊到：${state.pairings[state.activeCard].transition.theme}` : '加一个词，看看这张图会带来什么新的联想。';
   $('#word-count').textContent=`已抽 ${state.wordPicks.length} / 3 张字卡`;
   $('#word-grid').innerHTML=state.wordDeck.map((_,position)=>{
     const used=state.wordPicks.some(p=>p.position===position);
