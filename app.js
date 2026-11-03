@@ -397,7 +397,7 @@ async function startLiveReply(card) {
     if(state!==round||round.status!=='active'||round.revisions[card]!==revision||data.session_id!==round.id||data.input_revision!==revision||data.request_id!==requestId)return;
     const answer=formatAssistantReply(data.message,data.question);
     const rule=data.rules?.[0],claim=data.claims?.[0];
-    round.turns.push({id:crypto.randomUUID(),role:'assistant',text:answer,card,reply_to:lastUser.id,reply_action:data.next_action,word_transition:data.word_transition,image_transition:data.image_transition,review_transition:data.review_transition,other_feelings_invitation:data.other_feelings_invitation,basic_answers:data.basic_answers,word_context:wordContext(card),at:new Date().toISOString(),origin:'DeepSeek 实时回应',question:data.question,
+    round.turns.push({id:crypto.randomUUID(),role:'assistant',text:answer,card,reply_to:lastUser.id,reply_action:data.next_action,word_transition:data.word_transition,image_transition:data.image_transition,review_transition:data.review_transition,other_feelings_invitation:data.other_feelings_invitation,basic_answers:data.basic_answers,word_context:wordContext(card),at:new Date().toISOString(),origin:data.trace?.provider==='program'?'玩法转场':'DeepSeek 实时回应',question:data.question,
       quotes:data.evidence.map(e=>e.quote),basis:data.basis,ruleLine:rule?.line||53,ruleName:rule?.name||'围绕原话回应',
       usedRules:data.rules,claimId:claim?.id,hypothesis:claim?.text,claimState:claim?'proposed':undefined,claimOrigin:claim?.origin,claimScope:claim?.scope,audit:data.trace});
     if(round.pairings[card]?.status==='image_only' && data.word_transition?.ready===true && !['pause','end'].includes(data.next_action)) round.pairings[card]={status:'ready',transition:data.word_transition};
