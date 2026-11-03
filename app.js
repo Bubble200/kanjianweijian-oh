@@ -258,6 +258,8 @@ function formatAssistantReply(message, question = null) {
   return answer + (hasNotice ? `\n\n（${EXPLORATION_NOTICE}）` : '');
 }
 function renderTurn(turn) {
+  // Keep the transition event for history/audit, but go straight to the deck.
+  if(turn.role==='assistant'&&turn.reply_action==='summarize'&&turn.word_transition?.ready&&!turn.question)return '';
   const assistant = turn.role === 'assistant';
   const candidates = turn.usedRules?.length ? turn.usedRules : [{line:turn.ruleLine || 29,name:turn.ruleName || '提问与解释规则'}];
   const rules = candidates.filter((r,i,a) => Number.isInteger(r.line) && r.line > 0 && a.findIndex(other=>other.line===r.line)===i);
