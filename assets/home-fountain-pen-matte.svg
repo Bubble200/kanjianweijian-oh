@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 266" width="36" height="266">
+  <defs>
+    <linearGradient id="body">
+      <stop stop-color="#1d3027"/>
+      <stop offset=".34" stop-color="#4a5b4d"/>
+      <stop offset=".70" stop-color="#35493c"/>
+      <stop offset="1" stop-color="#21352b"/>
+    </linearGradient>
+    <linearGradient id="trim">
+      <stop stop-color="#75674e"/>
+      <stop offset=".43" stop-color="#a89a76"/>
+      <stop offset="1" stop-color="#7d6f54"/>
+    </linearGradient>
+    <linearGradient id="nib">
+      <stop stop-color="#737b70"/>
+      <stop offset=".46" stop-color="#a6ab99"/>
+      <stop offset="1" stop-color="#7d8577"/>
+    </linearGradient>
+    <filter id="matte" x="-5%" y="-1%" width="110%" height="102%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" seed="21" result="noise"/>
+      <feColorMatrix in="noise" type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".36"/></feComponentTransfer>
+      <feComposite in2="SourceAlpha" operator="in" result="grain"/>
+      <feBlend in="SourceGraphic" in2="grain" mode="soft-light"/>
+    </filter>
+  </defs>
+  <g filter="url(#matte)">
+  <path d="M7 21C7 10 11 4 18 4s11 6 11 17l2 77H5z" fill="url(#body)" stroke="#14271f" stroke-width=".7"/>
+  <path d="M7 97h22l-1 94c0 15-3 24-6 31h-8c-4-7-6-18-6-31z" fill="url(#body)" stroke="#20342a" stroke-width=".65"/>
+  <path d="M6 93h24v5H6zm2 8h20v2H8z" fill="url(#trim)"/>
+  <path d="M12 215h12l-2 18h-8z" fill="#1e322a"/>
+  <path d="M13 229c-1 6-2 11 1 17l4 13 4-13c3-6 2-11 1-17z" fill="url(#nib)" stroke="#515e54" stroke-width=".55"/>
+  <path d="M18 242v16m-3.5-22 1.5 5m5.5-5-1.5 5" fill="none" stroke="#47564a" stroke-width=".6" stroke-linecap="round"/>
+  <circle cx="18" cy="241.8" r="1.15" fill="#33463c"/>
+  <path d="M23 17c4-2 6 0 6 3l1 54c0 4-3 6-4 3l-1-53c0-2-.7-3-2-3z" fill="url(#trim)" stroke="#615b48" stroke-width=".5"/>
+  <path d="M12 210h12m-12 3h12m-11 3h10m-10 3h10" stroke="#1a2f25" stroke-width=".65" opacity=".7"/>
+  </g>
+</svg>

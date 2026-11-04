@@ -1,15 +1,13 @@
 # 看见未见 · OH卡备用入口
 
-网页由 GitHub Pages 托管，Supabase Edge Function `oh-backup` 将固定的 session/status/chat 请求转发给现有 AI 服务。
+备用链接：https://bubble200.github.io/kanjianweijian-oh/
+原站保留：https://kanjianweijian-oh.yaoyutao666.chatgpt.site/
 
-- 原网站保留：https://kanjianweijian-oh.yaoyutao666.chatgpt.site
-- 备用网址：https://bubble200.github.io/kanjianweijian-oh/
-- 规则与全站每天200次调用额度由现有服务统一执行，不另增额度。
-- 备用访客可能共用出口IP的每分钟6次短时限额。
-- DeepSeek密钥不进入本仓库、浏览器或Supabase函数；访客cookie仅在服务端请求中使用。
-- 记忆与回顾仍保存在各自网址的浏览器存储，不自动迁移或跨网址同步。
-- 这是备用访问入口，仍依赖原AI服务；不是独立的后端灾备。
-
-## 维护
-
-`backend/index.ts` 是Supabase函数源代码，`backend/test.mjs`验证来源、固定目标、限额传递和cookie隔离。使用 `node --test backend/test.mjs`。前端保持原网站玩法，仅适配项目子路径、跨域连接和说明。无需数据库迁移，不更改单词本数据。
+- 已同步主站的手机版、邮箱账号、私人回顾与记忆，以及原有图字卡玩法。
+- 两个入口使用同一套邮箱账号和私人云端存档；分别登录后能看到自己主动保存的记录。账号不要求 ChatGPT，可使用已有单词本账号。
+- 未登录的浏览器本机记录仍按网址分别保留，不会自动上传；在账号中确认复制后才加入云端。AI 的推测不自动成为个人事实。
+- 主动保存的图卡、字卡、本人原话、AI 回应和后续反馈分开保留，身份与访问权限由 Supabase Auth 和数据库 RLS 执行。
+- 验证与找回邮件的回跳地址使用本入口根路径；不更改原站或单词本的地址。
+- AI 仍通过 Supabase 的 oh-backup 代理至原站，规则及全站每天 200 次额度统一维护，不另增额度。备用访客可能共用出口 IP 的短时防刷额度。
+- DeepSeek 密钥不在前端，代码中的 Supabase publishable key 是公开客户端配置，不是服务端密钥。
+- 这是备用访问入口，不是独立 AI 后端灾备；大陆无 VPN 的连通性仍需按实际网络测试。

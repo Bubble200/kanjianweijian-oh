@@ -16,6 +16,7 @@ const dateLabel = date => new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shangh
 let state = null, currentView = 'home', memoryTab = 'round', toastTimeout, preparedDeck = null;
 let memories = [], savedReviews = [];
 let previousRoundCards = [];
+let libraryAccount = null, libraryLoading = false, libraryError = '', librarySaving = false;
 try {
   const stored = JSON.parse(localStorage.getItem(homeCardsKey) || '[]');
   if (validHomeCards(stored)) previousRoundCards = stored;
@@ -68,6 +69,7 @@ function rememberHomeCards() {
   // A sample replay never replaces the visitor's own last completed draw.
   if (!state || state.demoRound || !validHomeCards(state.cards)) return;
   previousRoundCards = [...state.cards];
+  if (libraryAccount) return;
   try { localStorage.setItem(homeCardsKey, JSON.stringify(previousRoundCards)); }
   catch { toast('上一轮图卡暂时只能在本页保留。'); }
 }
@@ -90,8 +92,9 @@ function addTurn(role, text, options = {}) {
 function openDeck() {
   if (!state || state.status !== 'active' || state.cards.length >= 3 || state.pending) return;
   state.peekPosition = null;
+  $('#deck-confirm').hidden = true;
   $('#deck-title').textContent = state.cards.length ? '再从牌叠里，挑一张。' : '从牌叠里，选一张。';
-  $('#deck-hint').textContent = matchMedia('(hover: none)').matches ? '88 张牌，轻点抬起，再点一次选中。' : '88 张牌，慢慢挑。';
+  $('#deck-hint').textContent = matchMedia('(max-width: 720px), (hover: none)').matches ? '左右滑动牌叠，轻点抬起后再选。' : '88 张牌，慢慢挑。';
   $('#deck-count').textContent = `已抽 ${state.cards.length} / 3 张`;
   // Only positions are rendered: no face, file name, or hidden image URL is put on a card back.
   $('#deck-grid').innerHTML = state.deck.map((_, position) => {
@@ -99,6 +102,16 @@ function openDeck() {
     return `<button class="deck-card ${used ? 'is-used' : ''}" style="--stack-order:${position % 44}" data-action="pick-position" data-position="${position}" ${used ? 'disabled' : ''} aria-label="${used ? `第 ${position+1} 个牌位已抽，作为第 ${pick+1} 张` : `选择第 ${position+1} 个牌位`}"><img class="cardback-art" src="assets/card-back-approved-v1.png" alt="" draggable="false" aria-hidden="true"><span class="deck-position" aria-hidden="true">${String(position+1).padStart(2,'0')}</span>${used ? `<span class="picked-badge">已抽 ${pick+1}</span>` : ''}</button>`;
   }).join('');
   if (!$('#deck-dialog').open) $('#deck-dialog').showModal();
+}
+function peekCard(kind, position) {
+  const word=kind==='word';
+  $$(word?'#word-grid .is-peeked':'#deck-grid .is-peeked').forEach(card=>card.classList.remove('is-peeked'));
+  const card=$(word?`#word-grid [data-position="${position}"]`:`#deck-grid [data-position="${position}"]`);
+  card?.classList.add('is-peeked');
+  if(word) state.peekWordPosition=position; else state.peekPosition=position;
+  const confirm=$(word?'#word-confirm':'#deck-confirm');
+  confirm.hidden=false;confirm.dataset.position=String(position);confirm.textContent=`选第 ${position+1} 张`;
+  confirm.setAttribute('aria-label',`确认选择第 ${position+1} 个${word?'字卡':''}牌位`);
 }
 function revealPosition(position) {
   if (!state || state.status !== 'active' || state.cards.length >= 3 || state.pending ||
@@ -140,8 +153,9 @@ function addOpening(card) {
 function openWordDeck() {
   if (!state || state.status!=='active' || state.pairings[state.activeCard]?.status!=='ready') return;
   state.peekWordPosition=null;
+  $('#word-confirm').hidden=true;
   $('#word-title').textContent=`给第 ${state.cards.indexOf(state.activeCard)+1} 张图，抽一个词。`;
-  $('#word-hint').textContent=matchMedia('(hover: none)').matches ? '88 张字卡，轻点抬起，再点一次选中。' : '88 张字卡，慢慢挑。';
+  $('#word-hint').textContent=matchMedia('(max-width: 720px), (hover: none)').matches ? '左右滑动牌叠，轻点抬起后再选。' : '88 张字卡，慢慢挑。';
   $('#word-count').textContent=`已抽 ${state.wordPicks.length} / 3 张字卡`;
   $('#word-grid').innerHTML=state.wordDeck.map((_,position)=>{
     const used=state.wordPicks.some(p=>p.position===position);
@@ -381,6 +395,7 @@ async function connectVisitor() {
 async function startLiveReply(card) {
   if (!liveAI || !state || state.status!=='active' || state.replyRequests[card]) return;
   const lastUser=[...state.turns].reverse().find(t=>t.card===card&&t.role==='user');if(!lastUser)return;
+  const accountOwner=libraryAccount?.id || null;
   const round=state, revision=round.revisions[card], requestId=crypto.randomUUID(), controller=new AbortController();
   round.replyRequests[card]={id:requestId,controller};delete round.replyErrors[card];renderSession();
   const payload={session_id:round.id,request_id:requestId,input_revision:revision,active_card:card,current_turn_id:lastUser.id,cards:[...round.cards],
@@ -393,7 +408,7 @@ async function startLiveReply(card) {
     const response=await fetch(window.OH_RUNTIME.apiBase+'/chat',{method:'POST',credentials:'omit',headers:{'content-type':'application/json','x-oh-request':'1'},body:JSON.stringify(payload),signal:controller.signal});
     let data;try { data=await response.json(); } catch { throw new Error('AI 返回的信息不完整，请稍后重试。'); }
     if (!response.ok) { if(response.status===401)visitorSessionPromise=null;throw new Error(data.error?.message||'AI 暂时没有回应，请稍后重试。'); }
-    if(state!==round||round.status!=='active'||round.revisions[card]!==revision||data.session_id!==round.id||data.input_revision!==revision||data.request_id!==requestId)return;
+    if(controller.signal.aborted||(libraryAccount?.id || null)!==accountOwner||state!==round||round.status!=='active'||round.revisions[card]!==revision||data.session_id!==round.id||data.input_revision!==revision||data.request_id!==requestId)return;
     const answer=formatAssistantReply(data.message,data.question);
     const rule=data.rules?.[0],claim=data.claims?.[0];
     round.turns.push({id:crypto.randomUUID(),role:'assistant',text:answer,card,reply_to:lastUser.id,reply_action:data.next_action,word_transition:data.word_transition,image_transition:data.image_transition,review_transition:data.review_transition,other_feelings_invitation:data.other_feelings_invitation,basic_answers:data.basic_answers,word_context:wordContext(card),at:new Date().toISOString(),origin:data.trace?.provider==='program'?'玩法转场':'DeepSeek 实时回应',question:data.question,
@@ -417,7 +432,7 @@ $('#active-card-image').addEventListener('error', () => {
   $('#card-id').textContent = `${cardID(state.activeCard)} · 图片加载失败`;
   toast('图片加载失败，点击卡片可重试；不会重新抽卡。');
 });
-function openInfo(html) { $('#info-content').innerHTML = html; if (!$('#info-dialog').open) $('#info-dialog').showModal(); }
+function openInfo(html) { delete $('#info-content').dataset.libraryOwner; $('#info-content').innerHTML = html; if (!$('#info-dialog').open) $('#info-dialog').showModal(); }
 function askToRestart(example = false) {
   if (state?.status === 'active' && (state.turns.some(t => t.role === 'user') || Object.values(state.drafts).some(v=>v.trim()))) {
     openInfo(`<p class="eyebrow">开始新的一轮</p><h2>先收好这一轮？</h2><p>尚未保存的本轮记录和输入框草稿会被新一轮替代。你可以先继续编辑，或回顾已发送内容，再重新开始。</p><div class="review-actions"><button class="primary" data-action="review-before-new">先回顾</button><button class="secondary" data-action="confirm-new" data-example="${example}">不保存，开始新一轮</button></div>`);
@@ -450,10 +465,11 @@ function renderReview() {
     ${accepted.length ? `<section class="review-section"><h2>你明确回应过的理解</h2>${accepted.map(t=>`<div class="quote-record"><p>${escapeHTML(t.hypothesis)}</p><small>本人后续回应：“${escapeHTML(t.feedbackQuote)}”</small></div>`).join('')}<p>只表示本人认可这一项，不自动确认其他推论。</p></section>` : ''}
     ${assistants.length ? `<section class="review-section"><h2>仍需核对的理解</h2>${assistants.map(t => `<div class="quote-record"><small>${t.example ? 'AI 示例推测' : 'AI 的可能理解'} · 尚未由本人逐项确认</small><p>${escapeHTML(t.hypothesis)}</p></div>`).join('')}<p>这些推测不作为用户事实写入长期记忆。</p></section>` : ''}
     <section class="review-section"><h2>有什么想留给下次？</h2><p>勾选后保存为“下次可参考”的内容。${state.example ? '这轮是示例，记忆也会标明“演示记录”，不当作新用户的真实经历。' : '这里只保存你的原话；它们是否也适用于以后，可以随时修改。'}</p>${candidates || '<p class="empty-state">没有可保存的个人表达。</p>'}${userTurns.length ? `<button class="secondary" data-action="save-memory">${remembered ? '继续选择要保留的内容' : '保存勾选内容到记忆'}</button>` : ''}</section>
-    <div class="review-actions"><button class="primary" data-action="save-review">${saved ? '已保存这轮回顾' : '保存这轮回顾'} ${icon('memory')}</button><button class="secondary" data-action="export-review">导出文字</button><button class="secondary" data-action="view-ended">回看对话</button></div><p class="small-caption">保存在当前浏览器，不上传到服务器。</p><button class="plain-link" data-action="start">再开始一轮 ↗</button>`;
+    <div class="review-actions"><button class="primary" data-action="save-review">${saved ? '已保存这轮回顾' : '保存这轮回顾'} ${icon('memory')}</button><button class="secondary" data-action="export-review">导出文字</button><button class="secondary" data-action="view-ended">回看对话</button></div><p class="small-caption">${escapeHTML(libraryAccount ? `保存到账号 ${libraryAccount.email}，可跨设备查看。` : '保存在当前浏览器；登录账号后可选择存入云端。')}</p><button class="plain-link" data-action="start">再开始一轮 ↗</button>`;
   showView('review');
 }
 function saveSelectedMemories() {
+  if (libraryLoading || librarySaving || libraryError) { toast(libraryError || '正在同步，请稍后保存。'); return; }
   const selected = $$('input[name=remember]:checked').map(input => input.value);
   if (!selected.length) { toast('先勾选想留给下次的内容。'); return; }
   const additions = state.turns.filter(t => selected.includes(t.id) && !memories.some(m => m.turnId === t.id && m.sessionId === state.id)).map(t => ({
@@ -461,12 +477,15 @@ function saveSelectedMemories() {
     at:new Date().toISOString(),updatedAt:null,example:Boolean(t.example), revisions:[]
   }));
   if (!additions.length) { toast('这些原话已经在记忆里，不重复添加。'); return; }
+  if (libraryAccount) { saveCloud('memory', additions); return; }
   const next = [...memories, ...additions];
   if (persist(memoryKey, next)) { memories = next; updateMemoryCount(); toast(`已保存 ${additions.length} 条，随时可在“我的记忆”查看。`); }
 }
 function saveReview() {
+  if (libraryLoading || librarySaving || libraryError) { toast(libraryError || '正在同步，请稍后保存。'); return; }
   if (savedReviews.some(r => r.id === state.id)) { toast('这轮回顾已经保存，不重复添加。'); return; }
   const record = { id:state.id, createdAt:state.createdAt, savedAt:new Date().toISOString(), cards:[...state.cards],picks:state.picks.map(p=>({...p})),wordDeckVersion:WORD_DECK.version,pairings:structuredClone(state.pairings),wordPicks:state.wordPicks.map(p=>({...p})),turns:state.turns.map(t => ({...t})) };
+  if (libraryAccount) { saveCloud('review', [record]); return; }
   const next = [...savedReviews, record];
   if (persist(reviewKey, next)) { savedReviews = next; renderReview(); toast('本轮回顾已保存在这个浏览器。'); }
 }
@@ -481,8 +500,10 @@ function exportReview() {
 function updateMemoryCount() { $('#memory-count').textContent=memories.length; $('#memory-count').hidden=!memories.length; }
 function openMemory() { renderMemory(); $('#memory-dialog').showModal(); }
 function renderMemory() {
+  $('#memory-dialog .drawer-footer').textContent = libraryAccount ? `账号：${libraryAccount.email} · 主动保存后同步到云端。AI 仅参考你选择留下的非示例记忆。` : '当前为浏览器本机记录；登录后可保存到账号并跨设备查看。';
   $$('[data-action=memory-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === memoryTab)));
   const body = $('#memory-body');
+  if (libraryAccount && memoryTab !== 'round' && (libraryLoading || libraryError)) { body.innerHTML=`<p>${escapeHTML(libraryError || '正在读取你的云端记忆…')}</p><button class="secondary" data-action="account">打开账号设置</button>`; return; }
   if (memoryTab === 'round') {
     if (!state || !state.cards.length) { body.innerHTML='<div class="empty-state"><h3>从这一轮开始。</h3><p>选牌后，这里会记下卡片、你的表达和正在聊的问题。未选择保存前，只在本页临时使用。</p></div>'; return; }
     const currentTurns = state.turns.filter(t=>t.card===state.activeCard);
@@ -492,8 +513,11 @@ function renderMemory() {
   } else if (memoryTab === 'long') {
     body.innerHTML=`<p class="drawer-intro">只保留你主动选择的内容。修改后以最新说法为准，原话出处仍可查看。删除会停止将它作为跨轮记忆，但不会同时删除已保存回顾。</p>${memories.length ? memories.map(m => `<article class="memory-entry" data-memory-id="${m.id}"><p class="memory-text">${escapeHTML(m.text)}</p><small>${dateLabel(m.at)} · ${cardID(m.card)}${m.example ? ' · 演示记录，不作真人事实' : ' · 本人选择保留'}${m.updatedAt ? ' · 已修改' : ''}</small><details><summary>查看原话出处</summary><blockquote>${escapeHTML(m.source)}</blockquote><p>本轮原话 ${escapeHTML(m.turnId.slice(0,8))}${m.revisions.length ? ` · 已修改 ${m.revisions.length} 次` : ''}</p></details><div class="entry-actions"><button data-action="edit-memory" data-id="${m.id}">修改</button><button data-action="delete-request" data-kind="memory" data-id="${m.id}">删除</button></div></article>`).join('') : '<div class="empty-state"><h3>值得留下的，由你选。</h3><p>一轮结束后，勾选想留给下次参考的话，它们会出现在这里。AI 的猜测不会自动进入。</p></div>'}`;
   } else {
-    body.innerHTML=`<p class="drawer-intro">完整回顾单独保存，不等于把里面的每句话都作为长期记忆使用。</p>${savedReviews.length ? savedReviews.map(r => `<article class="memory-entry" data-review-id="${r.id}"><p>${dateLabel(r.createdAt)} 的探索</p><small>${r.cards.length} 张图卡 · ${r.turns.filter(t=>t.role==='user').length} 条个人表达</small><div class="entry-actions"><button data-action="open-saved" data-id="${r.id}">展开回顾</button><button data-action="delete-request" data-kind="review" data-id="${r.id}">删除</button></div></article>`).join('') : '<div class="empty-state"><h3>这里还没有回顾。</h3><p>完成一轮后，选择“保存这轮回顾”，以后就可以再来看。</p></div>'}`;
+    body.innerHTML=`<p class="drawer-intro">完整回顾单独保存，不等于把里面的每句话都作为长期记忆使用。</p>${savedReviews.length ? savedReviews.map(r => `<article class="memory-entry" data-review-id="${r.id}"><p>${dateLabel(r.createdAt)} 的探索</p><div class="saved-thumbnails">${r.cards.map(n=>`<img src="${cardURL(n)}" alt="${cardID(n)}">`).join('')}</div><small>${r.turns.some(t=>t.role==='user') && r.turns.filter(t=>t.role==='user').every(t=>t.example)?'演示记录 · 非本人经历 · ':''}${r.cards.length} 张图卡 · ${r.turns.filter(t=>t.role==='user').length} 条个人表达</small><div class="entry-actions"><button data-action="open-saved" data-id="${r.id}">展开回顾</button><button data-action="delete-request" data-kind="review" data-id="${r.id}">删除</button></div></article>`).join('') : '<div class="empty-state"><h3>这里还没有回顾。</h3><p>完成一轮后，选择“保存这轮回顾”，以后就可以再来看。</p></div>'}`;
   }
+}
+function savedReviewHTML(r) {
+  return `<p class="eyebrow">已保存的回顾</p><h2>${dateLabel(r.createdAt)}</h2><div class="review-cards">${reviewPairs(r.cards,r.pairings)}</div><h3>按当时的对话回看</h3>${r.turns.map(t=>`<div class="quote-record ${t.role==='user'?'archive-user':'archive-ai'}"><small>${cardID(t.card)}${escapeHTML(turnWordLabel(t))} · ${t.role==='user'?(t.example?'示例人物原话（非本人经历）':'你的原话'):t.example?'AI 示例回应':'AI 回应'}</small><p>${escapeHTML(t.text)}</p>${t.hypothesis?`<p class="archive-interpretation">当时的理解：${escapeHTML(t.hypothesis)}</p><small>${({accepted:t.example?'示例人物认可了这一项':'你当时认可了这一项',rejected:'你已否定这一理解',superseded:'这项理解已被后续说法替代'})[t.claimState]||'尚未逐项确认'}</small>`:''}${t.feedbackQuote?`<blockquote>${t.example?'示例人物的后续回应':'你的后续回应'}：${escapeHTML(t.feedbackQuote)}</blockquote>`:''}${t.feedbackReason?`<p>${escapeHTML(t.feedbackReason)}</p>`:''}</div>`).join('') || '<p>这一轮没有文字记录。</p>'}<p class="small-caption">AI 的回应与个人原话分开保留。保存整轮不代表将 AI 解读认定为个人事实。</p>`;
 }
 function editMemory(id) {
   const memory=memories.find(m=>m.id===id), entry=$(`[data-memory-id="${id}"]`);
@@ -526,15 +550,14 @@ document.addEventListener('click', event => {
   else if (action === 'pick-word') {
     const position=Number(target.dataset.position);
     if (matchMedia('(hover: none)').matches && event.detail!==0 && state.peekWordPosition!==position) {
-      $$('#word-grid .is-peeked').forEach(c=>c.classList.remove('is-peeked'));state.peekWordPosition=position;target.classList.add('is-peeked');
+      peekCard('word',position);
     } else revealWord(position);
   }
   else if (action === 'retry-ai') startLiveReply(state.activeCard);
   else if (action === 'pick-position') {
     const position=Number(target.dataset.position);
     if (matchMedia('(hover: none)').matches && event.detail !== 0 && state.peekPosition !== position) {
-      $$('.deck-card.is-peeked').forEach(card=>card.classList.remove('is-peeked'));
-      state.peekPosition=position; target.classList.add('is-peeked');
+      peekCard('image',position);
     } else revealPosition(position);
   }
   else if (action === 'next-example') nextExample();
@@ -542,6 +565,7 @@ document.addEventListener('click', event => {
   else if (action === 'zoom') openCardZoom(state.activeCard);
   else if (action === 'zoom-pair') openCardZoom(Number(target.dataset.card),target.dataset.word);
   else if (action === 'memory') openMemory();
+  else if (action === 'account') window.OHAccounts?.open();
   else if (action === 'memory-tab') { memoryTab=target.dataset.tab; renderMemory(); }
   else if (action === 'review') openReview();
   else if (action === 'confirm-end') {
@@ -563,20 +587,24 @@ document.addEventListener('click', event => {
     const id=target.dataset.id, value=$('.memory-edit',target.closest('.memory-entry')).value.trim();
     if (!value) { toast('内容不能为空；如果不想保留，可以删除。'); return; }
     const next=memories.map(m=>m.id===id ? {...m,text:value,updatedAt:new Date().toISOString(),revisions:[...m.revisions,{text:m.text,at:new Date().toISOString()}]} : m);
+    if (libraryAccount) { saveCloud('memory',next.filter(m=>m.id===id)); return; }
     if (persist(memoryKey,next)) { memories=next; renderMemory(); toast('已更新，以新说法为准。'); }
   }
   else if (action === 'delete-request') deleteRequest(target);
   else if (action === 'delete-confirm') {
     const kind=target.dataset.kind,id=target.dataset.id;
+    if (libraryAccount) { deleteCloud(kind,(kind==='memory'?memories:savedReviews).find(v=>v.id===id)); return; }
     const next=(kind==='memory' ? memories : savedReviews).filter(v=>v.id!==id);
     if (persist(kind==='memory'?memoryKey:reviewKey,next)) { if(kind==='memory') memories=next; else savedReviews=next; updateMemoryCount(); renderMemory(); toast('已删除这条记录。'); }
   }
   else if (action === 'open-saved') {
     const r=savedReviews.find(v=>v.id===target.dataset.id);
-    openInfo(`<p class="eyebrow">已保存的回顾</p><h2>${dateLabel(r.createdAt)}</h2><div class="review-cards">${reviewPairs(r.cards,r.pairings)}</div>${r.turns.filter(t=>t.role==='user').map(t=>`<div class="quote-record"><small>${cardID(t.card)}${escapeHTML(turnWordLabel(t))} · 原话</small><p>${escapeHTML(t.text)}</p></div>`).join('') || '<p>这一轮没有个人表达。</p>'}<p class="small-caption">这里只显示原话。AI 示例推测不作为个人事实。</p>`);
+    if (!r) return;
+    openInfo(savedReviewHTML(r));
+    if(libraryAccount) $('#info-content').dataset.libraryOwner=libraryAccount.id;
   }
   else if (action === 'how') openInfo(`<p class="eyebrow">没有标准答案</p><h2>给一张图，留一点想象。</h2><ol><li>88 张牌背叠放在一起，每张露出一部分；悬停抬起后自己点选。</li><li>先围绕图卡聊出自己的感受、评价或故事。形成具体线索、且你有机会补充或修正后，再进入字卡抽选；不按固定轮数。也可以点“只看图卡”跳过，或在聊天时“先不用字卡”。用自己的话说联想与感受，不必强行把词用上。</li><li>聊天时，右侧随时可以再打开牌桌；一轮最多三张，选过的位置不能再选。</li><li>本轮牌位不变，整轮结束后重新洗牌。想停时随时回顾、保存。</li></ol><p>图像没有固定牌意，不做人格计分。你可以直接在对话里纠正 AI，不需要给回答打分。</p><p><a href="skill/#L27" target="_blank" rel="noopener">查看当前引导规则 ↗</a></p>`);
-  else if (action === 'about') openInfo(`<p class="eyebrow">OH 卡交互展示版</p><h2>先体验它如何展开。</h2><p>本站使用 88 张图卡及 88 张中文字卡清晰重排版。图卡与字卡分别独立洗牌，每张图先聊，形成线索并由你补充或修正后，再进入一张字卡的抽选；一轮最多三组，同类牌轮内不重复，可跳过或停用字卡。</p><p>“先看看怎么玩”展示虚构对话示例，不对应真实参与者；发送后由 DeepSeek 根据实际图卡、当前对话和引导规则实时回应。</p><p>记忆与回顾仅在主动保存后写入这个浏览器；另外只自动记住上一轮的卡号，供首页展示，不自动保存对话。AI 对话会把本轮已揭示图卡、字卡及其使用状态、对话及本人选择留作参考的非示例记忆经 Supabase 转发至现有 AI 服务并交给 DeepSeek 处理。两个入口共用每天200次额度；备用入口的访客可能共用短时防刷额度。本站不在云端保存对话或记忆，没有账号与云同步。清除浏览器数据会移除已保存内容。</p><p>界面为原创展示设计；只借鉴参考站的轻量、逐步体验，不复制它的品牌和角色。图卡由站点所有者提供并确认具有对外展示授权。中文字卡沿用此前整理的四边字清晰重排版，不是原扫描图或经认证的官方版；<a href="words/source.json" target="_blank" rel="noopener">查看词表与素材来源</a>。</p>`);
+  else if (action === 'about') openInfo(`<p class="eyebrow">OH 卡交互展示版</p><h2>先体验它如何展开。</h2><p>本站使用 88 张图卡及 88 张中文字卡清晰重排版。图卡与字卡分别独立洗牌，每张图先聊，形成线索并由你补充或修正后，再进入一张字卡的抽选；一轮最多三组，同类牌轮内不重复，可跳过或停用字卡。</p><p>“先看看怎么玩”展示虚构对话示例，不对应真实参与者；发送后由 DeepSeek 根据实际图卡、当前对话和引导规则实时回应。</p><p>未登录时，主动保存的记忆与回顾留在当前浏览器；登录后，主动保存的内容会写入你的私人账号，可跨设备查看。旧的本机记录不会自动上传，可在账号里选择复制。AI 对话会把本轮已揭示图卡、字卡及其使用状态、对话及本人选择留作参考的非示例记忆经 Supabase 转发至现有 AI 服务并交给 DeepSeek 处理。两个入口共用每天200次额度。邮箱账号与主动保存的记录由 Supabase 托管；各账号只能访问自己的记录。清除浏览器数据只移除本机记录，不会删除账号里的存档。</p><p>界面为原创展示设计；只借鉴参考站的轻量、逐步体验，不复制它的品牌和角色。图卡由站点所有者提供并确认具有对外展示授权。中文字卡沿用此前整理的四边字清晰重排版，不是原扫描图或经认证的官方版；<a href="words/source.json" target="_blank" rel="noopener">查看词表与素材来源</a>。</p>`);
 });
 function renderResumeButton() {
   const primary=$('#home-start'), active=state?.status==='active';
@@ -587,3 +615,71 @@ $('#deck-dialog').addEventListener('close', () => { if(currentView==='home') ren
 for (const dialog of $$('dialog')) dialog.addEventListener('click', event => { if (event.target === dialog) { const r=dialog.getBoundingClientRect(); if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom) dialog.close(); } });
 updateMemoryCount();
 renderHomeCards();
+
+// Account libraries never replace the anonymous local copy or an ongoing round.
+function refreshLibraryViews() {
+  updateMemoryCount();
+  if ($('#memory-dialog').open) renderMemory();
+  if (currentView==='review' && state) renderReview();
+}
+function localCollection(key) { try { const v=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(v)?v:[]; } catch {return [];} }
+function libraryHome() {
+  const latest=[...savedReviews].sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt)).find(r=>validHomeCards(r.cards));
+  previousRoundCards=latest?[...latest.cards]:[];
+  if (currentView==='home') renderHomeCards();
+}
+async function saveCloud(kind,items) {
+  if(librarySaving||libraryLoading||libraryError)return;
+  const owner=libraryAccount?.id;if(!owner)return;
+  librarySaving=true;
+  try {
+    const values=await window.OHAccounts.save(kind,items);
+    if(libraryAccount?.id!==owner)return;
+    if(kind==='memory') memories=values; else {savedReviews=values;libraryHome();}
+    refreshLibraryViews();toast('已保存到你的账号。');
+  } catch(error) { if(libraryAccount?.id===owner) toast(window.OHAccounts.error(error)); }
+  finally {librarySaving=false;}
+}
+async function deleteCloud(kind,item) {
+  if(librarySaving||libraryLoading||libraryError||!item)return;
+  const owner=libraryAccount?.id;librarySaving=true;
+  try {
+    const values=await window.OHAccounts.remove(kind,item);
+    if(libraryAccount?.id!==owner)return;
+    if(kind==='memory')memories=values;else {savedReviews=values;libraryHome();}
+    refreshLibraryViews();toast('已从你的账号删除。');
+  }catch(error){if(libraryAccount?.id===owner)toast(window.OHAccounts.error(error));}
+  finally{librarySaving=false;}
+}
+window.addEventListener?.('oh-library-state',event=>{
+  const detail=event.detail,changed=libraryAccount?.id!==detail.user?.id;
+  libraryAccount=detail.user;libraryLoading=detail.loading;libraryError=detail.error||'';
+  if(changed || (libraryAccount && detail.loading)){memories=[];savedReviews=[];previousRoundCards=[];}
+  if(!libraryAccount){memories=localCollection(memoryKey);savedReviews=localCollection(reviewKey);previousRoundCards=localCollection(homeCardsKey);if(!validHomeCards(previousRoundCards))previousRoundCards=[];}
+  else if(!detail.loading&&!detail.error){memories=detail.memories||[];savedReviews=detail.reviews||[];libraryHome();}
+  if(changed && $('#info-content').dataset.libraryOwner){$('#info-content').innerHTML='';$('#info-dialog').close();}
+  if(changed && state){
+    for(const pending of Object.values(state.replyRequests||{}))pending.controller.abort();
+    state.pending=false;
+  }
+  refreshLibraryViews();if(currentView==='home')renderHomeCards();
+});
+window.addEventListener?.('oh-library-import',()=>{
+  if(!libraryAccount||libraryLoading||librarySaving)return;
+  const m=localCollection(memoryKey),r=localCollection(reviewKey);
+  if(!m.length&&!r.length){toast('这个浏览器还没有已保存的记录。');return;}
+  $('#account-dialog').close();
+  openInfo(`<p class="eyebrow">带上旧记录</p><h2>复制到你的账号？</h2><p>将这个浏览器的 ${r.length} 轮回顾、${m.length} 条记忆复制到 ${escapeHTML(libraryAccount.email)}。本机原件保留，账号里已有的同一记录不会被覆盖。</p><button class="primary" data-action="confirm-import" data-owner="${escapeHTML(libraryAccount.id)}">确认复制</button>`);
+});
+document.addEventListener('click',async event=>{
+ const target=event.target.closest('[data-action="confirm-import"]');if(!target||target.disabled||librarySaving||target.dataset.owner!==libraryAccount?.id)return;
+ const owner=libraryAccount.id;target.disabled=true;librarySaving=true;
+ try {
+   const m=localCollection(memoryKey),r=localCollection(reviewKey);
+   if(m.length)await window.OHAccounts.save('memory',m.map(({_revision,...v})=>v));
+   if(r.length)await window.OHAccounts.save('review',r.map(({_revision,...v})=>v));
+   if(libraryAccount?.id!==owner)return;
+   await window.OHAccounts.sync();$('#info-dialog').close();toast('本机记录已复制到账号，原件仍保留。');
+ }catch(error){toast(window.OHAccounts.error(error));target.disabled=false;}
+ finally{librarySaving=false;}
+});
