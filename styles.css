@@ -224,3 +224,17 @@ body:has(#home-view:not([hidden])) .site-header .brand::after {
   .card-stage .card-topline { flex-wrap: wrap; gap: 3px; }
   .draw-next strong { font-size: 13px; }
 }
+
+/* Choose the round once; the transcript and stored records retain that mode. */
+.mode-picker { display: flex; gap: 10px; margin-top: 24px; max-width: 430px; }
+.mode-picker > button { flex: 1; min-width: 0; padding: 12px 14px; text-align: left; border: 1px solid #53654870; border-radius: 9px; background: #f8f2dd45; }
+.mode-picker strong { display: block; font: 500 18px/1.5 var(--serif); }
+.mode-picker span { display: block; margin-top: 4px; font-size: 12px; line-height: 1.6; }
+.mode-picker > button[aria-pressed=true] { background: #f3e9cd; color: #30452f; border-color: #4c604a; box-shadow: inset 0 0 0 1px #4c604a; }
+.mode-picker > button:disabled { cursor: default; }
+.mode-note { font-size: 12px; line-height: 1.7; margin-top: 10px; }
+.mode-note:empty { display: none; }
+.session-layout[data-play-mode=image_word] { grid-template-columns: minmax(190px, .42fr) minmax(0, 1fr); }
+@media (min-width: 721px) and (max-width: 960px) {
+  .session-layout[data-play-mode=image_word] { grid-template-columns: minmax(160px, .42fr) minmax(0, 1fr); }
+}

@@ -221,3 +221,15 @@
   .session-layout > .card-stage { --pinned-image-height: 100px; gap: 3px 12px; padding-block: 8px; }
   .card-stage .card-topline { flex-direction: row; flex-wrap: wrap; gap: 5px 12px; }
 }
+@media (max-width: 720px) {
+  .mode-picker { order: 3; width: 100%; max-width: 380px; margin: 10px auto 0; gap: 8px; }
+  .mode-picker > button { min-height: 76px; padding: 10px 12px; }
+  .mode-picker strong { font-size: 17px; }
+  .mode-picker span { font-size: 11px; }
+  .mode-note { order: 4; margin: 10px 0 0; text-align: center; }
+  .hero-actions { order: 5; margin-top: 16px; }
+  .home-view .home-bottom { order: 6; }
+  .session-layout[data-play-mode=image_word] { display: block; }
+  body:has(.session-layout[data-play-mode=image_word]):has(#session-view:not([hidden])) .session-view { padding-bottom: 30px; }
+  body:has(.session-layout[data-play-mode=image_word]):has(#session-view:not([hidden])) > .toast { bottom: 18px; }
+}
