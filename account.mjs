@@ -92,6 +92,7 @@ $('#account-content').addEventListener('click',async event=>{
 client.auth.onAuthStateChange((event,session)=>{
  // No awaited Supabase call inside the auth lock.
  const previous=user?.id;user=session?.user||null;
+ $('#account-button').textContent=user?'我的账号':'登录 / 注册';
  if(event==='PASSWORD_RECOVERY'){mode='password';status='';render();$('#account-dialog').showModal();}
  if(previous!==user?.id || event==='INITIAL_SESSION') {
   notify('oh-library-state',{user,loading:true});
