@@ -217,7 +217,10 @@ function renderSession() {
   $('#active-card-image').alt = `本轮第 ${position} 张图卡 ${cardID(n)}`;
   // Keep the image readable throughout the conversation, including after word pairing.
   $('.card-stage').classList.remove('compact');
-  $('#card-strip').innerHTML = state.cards.map((c, i) => `<button class="card-thumb ${c === n ? 'active' : ''}" data-action="select-card" data-card="${c}" aria-pressed="${c === n}"><img src="${cardURL(c)}" alt="">第 ${i+1} 张${state.pairings[c]?.status==='paired'?` · ${escapeHTML(wordFor(c).text)}`:''}</button>`).join('');
+  const pinnedWord = pairing?.status === 'paired' ? wordFor(n) : null;
+  $('#pinned-word').hidden = !pinnedWord;
+  $('#pinned-word').textContent = pinnedWord ? `字卡 · ${pinnedWord.text}` : '';
+  $('#card-strip').innerHTML = state.cards.map((c, i) => `<button class="card-thumb ${c === n ? 'active' : ''}" data-action="select-card" data-card="${c}" aria-pressed="${c === n}"><img src="${cardURL(c)}" alt=""><span>第 ${i+1} 张</span>${state.pairings[c]?.status==='paired'?`<span class="thumb-word"> · ${escapeHTML(wordFor(c).text)}</span>`:''}</button>`).join('');
   const cardTurns=state.turns.filter(t => t.card === n);
   const latest=cardTurns.at(-1);
   const nextImage=state.status==='active' && state.cards.length<3 && state.cards.at(-1)===n && ['paired','skipped','removed'].includes(pairing?.status) && !state.replyRequests[n] && latest?.image_transition?.ready===true ? `<div class="next-image-step"><button class="primary" data-action="draw">抽第 ${state.cards.length+1} 张图卡 ${icon('arrow')}</button></div>` : '';

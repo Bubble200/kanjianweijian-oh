@@ -207,3 +207,20 @@ body:has(#home-view:not([hidden])) .site-header .brand::after {
 .mobile-only{display:none}
 
 .deck-window:focus-visible{outline:2px solid #b38348;outline-offset:2px}
+
+/* The active card is independent of the transcript, so long conversations cannot displace it. */
+.session-view { max-width: 1280px; }
+.session-layout { grid-template-columns: minmax(190px, .48fr) minmax(0, 1fr) 120px; gap: 24px; align-items: start; }
+.session-layout > .card-stage { position: sticky; top: 20px; align-self: start; min-width: 0; }
+.card-stage .current-card > img { width: auto; height: min(43dvh, 330px); max-width: 100%; max-height: none; }
+.card-stage .card-strip { flex-wrap: wrap; }
+.pinned-word { margin-top: 14px; font: 500 20px/1.5 var(--serif); text-align: center; overflow-wrap: anywhere; }
+@media (min-width: 721px) and (max-width: 960px) {
+  .session-view { padding-inline: 20px; }
+  .session-layout { grid-template-columns: minmax(160px, .48fr) minmax(0, 1fr) 90px; gap: 14px; }
+  .session-layout > .card-stage { padding-inline: 12px; }
+  .card-stage .current-card { padding: 7px; }
+  .card-stage .current-card > img { height: min(39dvh, 260px); }
+  .card-stage .card-topline { flex-wrap: wrap; gap: 3px; }
+  .draw-next strong { font-size: 13px; }
+}
