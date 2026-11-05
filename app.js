@@ -1,6 +1,6 @@
 import { PLAY_MODES, DEFAULT_PLAY_MODE, playMode, imageOnlyMode } from './play-modes.mjs';
 import { WORD_DECK } from './word-deck.mjs';
-import { EXPLORATION_NOTICE } from './dialogue-copy.mjs';
+import { EXPLORATION_NOTICE, FIRST_IMPRESSION_QUESTION } from './dialogue-copy.mjs?v=20261105-first-impression';
 'use strict';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -150,8 +150,8 @@ function pairLabel(card, pairs = state?.pairings, mode = state?.play_mode) {
 function addOpening(card) {
   if (state.turns.some(t=>t.card===card)) return;
   const paired=state.pairings[card]?.status==='paired';
-  const question=paired ? '把这张图和这个词放在一起，你会想到什么？' : '图里什么吸引了你的注意？';
-  addTurn('assistant',question,{card,question,basis:paired ? '先听你怎样理解图与字的组合；字卡本身不代表你的感受或特质。' : '先听你怎样描述这张卡，不预设图像代表什么。',ruleLine:paired ? 55 : 33,ruleName:paired ? '个人赋义优先' : '看卡：沿用本人的观察',origin:'引导问句'});
+  const question=paired ? '把这张图和这个词放在一起，你会想到什么？' : FIRST_IMPRESSION_QUESTION;
+  addTurn('assistant',question,{card,question,basis:paired ? '先听你怎样理解图与字的组合；字卡本身不代表你的感受或特质。' : '先听这张图带给你的第一联想或感受，不预设答案，也不要求一定说出情绪。',ruleLine:paired ? 55 : 29,ruleName:paired ? '个人赋义优先' : '基础提问：先听第一联想或感受',origin:'引导问句'});
 }
 function openWordDeck() {
   if(imageOnlyMode(state))return;
