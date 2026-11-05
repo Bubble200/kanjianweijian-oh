@@ -1,3 +1,4 @@
+import { roundArchive, createRoundAutosaver } from './round-autosave.mjs?v=20261105-autosave';
 import { PLAY_MODES, DEFAULT_PLAY_MODE, playMode, imageOnlyMode } from './play-modes.mjs';
 import { WORD_DECK } from './word-deck.mjs';
 import { EXPLORATION_NOTICE, FIRST_IMPRESSION_QUESTION } from './dialogue-copy.mjs?v=20261105-first-impression';
@@ -19,6 +20,7 @@ let state = null, currentView = 'home', memoryTab = 'round', toastTimeout, prepa
 let memories = [], savedReviews = [];
 let previousRoundCards = [];
 let libraryAccount = null, libraryLoading = false, libraryError = '', librarySaving = false;
+let archiveStatus = null;
 try {
   const stored = JSON.parse(localStorage.getItem(homeCardsKey) || '[]');
   if (validHomeCards(stored)) previousRoundCards = stored;
@@ -29,6 +31,48 @@ const persist = (key, value) => {
   try { localStorage.setItem(key, JSON.stringify(value)); return true; }
   catch { toast('浏览器未能保存，请导出回顾留存。'); return false; }
 };
+const archiveCacheKey=owner=>`kanjianweijian.oh.pending-archives.v1.${owner}`;
+function writeArchiveLocal(owner,record){
+ const key=owner?archiveCacheKey(owner):reviewKey, records=localCollection(key);
+ const next=[...records.filter(r=>r.id!==record.id),record];
+ localStorage.setItem(key,JSON.stringify(next));
+ if(!owner&&!libraryAccount)savedReviews=next;
+}
+const roundSaver=createRoundAutosaver({
+ local:writeArchiveLocal,
+ clearLocal(owner,id){if(!owner)return;const key=archiveCacheKey(owner);try{localStorage.setItem(key,JSON.stringify(localCollection(key).filter(r=>r.id!==id)));}catch{/* Cloud acknowledgement remains valid; a duplicate pending checkpoint is safe to retry. */}},
+ canSync:owner=>libraryAccount?.id===owner&&!libraryLoading&&!libraryError&&Boolean(window.OHAccounts),
+ existing:(owner,id)=>owner===libraryAccount?.id?savedReviews.find(r=>r.id===id):null,
+ saveRemote:(owner,record)=>window.OHAccounts.save('review',[record],owner),
+ onStatus(detail){if(state?.id===detail.id&&state.archiveOwner===detail.owner){archiveStatus=detail;renderArchiveStatus();}},
+ onSaved(owner,records){if(libraryAccount?.id!==owner)return;savedReviews=records;libraryHome();if($('#memory-dialog').open)renderMemory();}
+});
+function archiveText(){
+ if(state?.demoRound)return '演示记录不会自动保存。';
+ if(!archiveStatus||archiveStatus.id!==state?.id)return '卡牌与已发送对话会自动保存。';
+ if(state?.archiveOwner&&state.archiveOwner!==libraryAccount?.id)return '本轮属于原账号，登录原账号后继续同步。';
+ if(archiveStatus.state==='saved')return '已自动保存到账号。';
+ if(archiveStatus.state==='local')return '已自动保存在当前浏览器。';
+ if(archiveStatus.state==='error')return archiveStatus.local?'同步未完成，本机副本已保留，可重试保存或导出文字。':'自动保存未完成，请重试或导出文字。';
+ if(archiveStatus.owner&&archiveStatus.owner!==libraryAccount?.id)return '本轮属于原账号，登录原账号后继续同步。';
+ return archiveStatus.local?'已保留本机副本，正在等待同步到账号…':'正在保存…';
+}
+function renderArchiveStatus(){
+ $('#autosave-status').textContent=archiveText();
+ $('#retry-autosave').hidden=archiveStatus?.state!=='error';
+ $('#export-autosave').hidden=archiveStatus?.state!=='error';
+ const reviewStatus=$('#review-autosave-status');if(reviewStatus)reviewStatus.textContent=archiveText();
+ const reviewRetry=$('#review-retry-autosave');if(reviewRetry)reviewRetry.hidden=archiveStatus?.state!=='error';
+}
+function autosaveRound(round=state){
+ if(!round?.cards.length||round.demoRound||round.autosaveStopped)return;
+ roundSaver.enqueue(round.archiveOwner??null,roundArchive(round,WORD_DECK.version));
+}
+async function retryArchives(){
+ if(state?.archiveOwner===null)autosaveRound();
+ await roundSaver.retry(libraryAccount?.id??null);
+ renderArchiveStatus();
+}
 function toast(message) {
   clearTimeout(toastTimeout); $('#toast').textContent = message; $('#toast').hidden = false;
   toastTimeout = setTimeout(() => { $('#toast').hidden = true; }, 3600);
@@ -45,11 +89,13 @@ function shuffledCards(items = Array.from({length:88}, (_, i) => i + 1)) {
   return cards;
 }
 function newRound(example = false, mode = selectedPlayMode) {
+  if(state?.cards.length&&state.status==='active'){state.status='ended';autosaveRound();}
   for (const pending of Object.values(state?.replyRequests || {})) pending.controller.abort();
   const deck = preparedDeck || shuffledCards();
   preparedDeck = null;
   if (example) { deck.splice(deck.indexOf(25), 1); deck.unshift(25); }
-  state = { play_mode:mode, id:crypto.randomUUID(), createdAt:new Date().toISOString(), status:'active', deck,
+  archiveStatus=null;
+  state = { archiveOwner:libraryAccount?.id??null,play_mode:mode, id:crypto.randomUUID(), createdAt:new Date().toISOString(), status:'active', deck,
     cards:[], picks:[], wordDeck:mode==='image_only'?[]:shuffledCards(WORD_DECK.cards.map(w=>w.id)), wordPicks:[], pairings:{}, activeCard:0, turns:[], drafts:{}, example, demoRound:example, exampleStep:0, viewedCards:[], pending:false, replyRequests:{}, replyErrors:{}, revisions:{} };
   $('#message-input').value = '';
   if (example) {
@@ -241,6 +287,7 @@ function renderSession() {
   $('#message-form button[type=submit]').disabled = state.status !== 'active' || Boolean(state.replyRequests[n]);
   updateDrawButton();
   const messages = $('#messages'); messages.scrollTop = messages.scrollHeight;
+  autosaveRound();renderArchiveStatus();
 }
 function renderConversation(turns) {
   const shownWords=new Set();
@@ -432,7 +479,7 @@ async function startLiveReply(card) {
     if(error.name!=='AbortError'&&state===round&&round.status==='active'&&round.revisions[card]===revision&&round.replyRequests[card]?.id===requestId)round.replyErrors[card]=error.message||'AI 暂时没有回应，你的文字还在，可以重试。';
   } finally {
     if(round.replyRequests[card]?.id===requestId)delete round.replyRequests[card];
-    if(state===round&&currentView==='session'){renderSession();}
+    if(state===round){autosaveRound(round);if(currentView==='session')renderSession();}
   }
 }
 $('#message-input').addEventListener('input', event => { if(state) state.drafts[state.activeCard]=event.target.value; });
@@ -446,7 +493,7 @@ $('#active-card-image').addEventListener('error', () => {
 function openInfo(html) { delete $('#info-content').dataset.libraryOwner; $('#info-content').innerHTML = html; if (!$('#info-dialog').open) $('#info-dialog').showModal(); }
 function askToRestart(example = false) {
   if (state?.status === 'active' && (state.turns.some(t => t.role === 'user') || Object.values(state.drafts).some(v=>v.trim()))) {
-    openInfo(`<p class="eyebrow">开始新的一轮</p><h2>先收好这一轮？</h2><p>尚未保存的本轮记录和输入框草稿会被新一轮替代。你可以先继续编辑，或回顾已发送内容，再重新开始。</p><div class="review-actions"><button class="primary" data-action="review-before-new">先回顾</button><button class="secondary" data-action="confirm-new" data-example="${example}">不保存，开始新一轮</button></div>`);
+    openInfo(`<p class="eyebrow">开始新的一轮</p><h2>先收好这一轮？</h2><p>本轮已发送的对话会自动留档；输入框未发送的草稿会被清空。你可以继续编辑，或先回顾再重新开始。</p><div class="review-actions"><button class="primary" data-action="review-before-new">先回顾</button><button class="secondary" data-action="confirm-new" data-example="${example}">结束本轮，开始新一轮</button></div>`);
   } else newRound(example);
 }
 function openReview() {
@@ -464,20 +511,20 @@ function reviewPairs(cards,pairs={},mode=DEFAULT_PLAY_MODE) {
   return cards.map(n=>`<figure class="review-pair"><img src="${cardURL(n)}" alt="图卡 ${cardID(n)}"><figcaption>${escapeHTML(pairLabel(n,pairs,mode))}</figcaption></figure>`).join('');
 }
 function renderReview() {
+  autosaveRound();
   const userTurns = state.turns.filter(t => t.role === 'user');
   const assistants = state.turns.filter(t => t.role === 'assistant' && t.hypothesis && !['accepted','rejected','superseded'].includes(t.claimState));
   const accepted = state.turns.filter(t=>t.claimState === 'accepted');
   const rows = userTurns.map(t => `<div class="quote-record"><small>${cardID(t.card)}${escapeHTML(turnWordLabel(t))} · 本人原话${t.example ? '（示例）' : ''}</small><p>${escapeHTML(t.text)}</p></div>`).join('');
   const candidates = userTurns.map(t => `<label class="remember-row"><input type="checkbox" name="remember" value="${t.id}"><span>${escapeHTML(t.text)}<small>${cardID(t.card)} · 只保留你选择的原话，不加入 AI 推测</small></span></label>`).join('');
   const remembered = memories.some(m => m.sessionId === state.id);
-  const saved = savedReviews.some(r => r.id === state.id);
-  $('#review-view').innerHTML = `<div class="review-heading"><p class="eyebrow">A LITTLE TAKEAWAY</p><h1>把这一刻，轻轻收好。</h1><p>不一定要得出结论。你愿意留下的，才留下。</p></div><div class="review-cards">${reviewPairs(state.cards,state.pairings,playMode(state))}</div>
+  $('#review-view').innerHTML = `<div class="review-heading"><p class="eyebrow">A LITTLE TAKEAWAY</p><h1>把这一刻，轻轻收好。</h1><p>卡牌与已发送对话会自动留档；想留给下次参考的内容，仍由你选择。</p></div><div class="review-cards">${reviewPairs(state.cards,state.pairings,playMode(state))}</div>
     <section class="review-section"><h2>这一轮，你说过</h2>${rows || '<p>这一轮还没有留下文字。看一看卡片，也可以结束。</p>'}</section>
     ${accepted.length ? `<section class="review-section"><h2>你明确回应过的理解</h2>${accepted.map(t=>`<div class="quote-record"><p>${escapeHTML(t.hypothesis)}</p><small>本人后续回应：“${escapeHTML(t.feedbackQuote)}”</small></div>`).join('')}<p>只表示本人认可这一项，不自动确认其他推论。</p></section>` : ''}
     ${assistants.length ? `<section class="review-section"><h2>仍需核对的理解</h2>${assistants.map(t => `<div class="quote-record"><small>${t.example ? 'AI 示例推测' : 'AI 的可能理解'} · 尚未由本人逐项确认</small><p>${escapeHTML(t.hypothesis)}</p></div>`).join('')}<p>这些推测不作为用户事实写入长期记忆。</p></section>` : ''}
     <section class="review-section"><h2>有什么想留给下次？</h2><p>勾选后保存为“下次可参考”的内容。${state.example ? '这轮是示例，记忆也会标明“演示记录”，不当作新用户的真实经历。' : '这里只保存你的原话；它们是否也适用于以后，可以随时修改。'}</p>${candidates || '<p class="empty-state">没有可保存的个人表达。</p>'}${userTurns.length ? `<button class="secondary" data-action="save-memory">${remembered ? '继续选择要保留的内容' : '保存勾选内容到记忆'}</button>` : ''}</section>
-    <div class="review-actions"><button class="primary" data-action="save-review">${saved ? '已保存这轮回顾' : '保存这轮回顾'} ${icon('memory')}</button><button class="secondary" data-action="export-review">导出文字</button><button class="secondary" data-action="view-ended">回看对话</button></div><p class="small-caption">${escapeHTML(libraryAccount ? `保存到账号 ${libraryAccount.email}，可跨设备查看。` : '保存在当前浏览器；登录账号后可选择存入云端。')}</p><button class="plain-link" data-action="start">再开始一轮 ↗</button>`;
-  showView('review');
+    <div class="review-actions"><button id="review-retry-autosave" class="secondary" data-action="retry-save" ${archiveStatus?.state==='error'?'':'hidden'}>重试保存 ${icon('memory')}</button><button class="secondary" data-action="export-review">导出文字</button><button class="secondary" data-action="view-ended">回看对话</button></div><p class="small-caption"><span id="review-autosave-status">${escapeHTML(archiveText())}</span></p><button class="plain-link" data-action="start">再开始一轮 ↗</button>`;
+  showView('review');renderArchiveStatus();
 }
 function saveSelectedMemories() {
   if (libraryLoading || librarySaving || libraryError) { toast(libraryError || '正在同步，请稍后保存。'); return; }
@@ -495,7 +542,7 @@ function saveSelectedMemories() {
 function saveReview() {
   if (libraryLoading || librarySaving || libraryError) { toast(libraryError || '正在同步，请稍后保存。'); return; }
   if (savedReviews.some(r => r.id === state.id)) { toast('这轮回顾已经保存，不重复添加。'); return; }
-  const record = { play_mode:playMode(state),id:state.id, createdAt:state.createdAt, savedAt:new Date().toISOString(), cards:[...state.cards],picks:state.picks.map(p=>({...p})),wordDeckVersion:WORD_DECK.version,pairings:structuredClone(state.pairings),wordPicks:state.wordPicks.map(p=>({...p})),turns:state.turns.map(t => ({...t})) };
+  const record = {...roundArchive(state,WORD_DECK.version),savedAt:new Date().toISOString()};
   if (libraryAccount) { saveCloud('review', [record]); return; }
   const next = [...savedReviews, record];
   if (persist(reviewKey, next)) { savedReviews = next; renderReview(); toast('本轮回顾已保存在这个浏览器。'); }
@@ -511,20 +558,20 @@ function exportReview() {
 function updateMemoryCount() { $('.memory-button').hidden=!libraryAccount?.id; $('#memory-count').textContent=memories.length; $('#memory-count').hidden=!memories.length; }
 function openMemory() { renderMemory(); $('#memory-dialog').showModal(); }
 function renderMemory() {
-  $('#memory-dialog .drawer-footer').textContent = libraryAccount ? `账号：${libraryAccount.email} · 主动保存后同步到云端。AI 仅参考你选择留下的非示例记忆。` : '当前为浏览器本机记录；登录后可保存到账号并跨设备查看。';
+  $('#memory-dialog .drawer-footer').textContent = libraryAccount ? `账号：${libraryAccount.email} · 卡牌与已发送对话自动保存。AI 仅参考你选择留下的非示例记忆。` : '本轮卡牌与已发送对话自动保存在当前浏览器；旧记录可在登录后主动复制到账号。';
   $$('[data-action=memory-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === memoryTab)));
   const body = $('#memory-body');
-  if (libraryAccount && memoryTab !== 'round' && (libraryLoading || libraryError)) { body.innerHTML=`<p>${escapeHTML(libraryError || '正在读取你的云端记忆…')}</p><button class="secondary" data-action="account">打开账号设置</button>`; return; }
+  if (libraryAccount && memoryTab !== 'round' && (libraryLoading || libraryError)) { body.innerHTML=`<p>${escapeHTML(libraryError || '正在读取你的云端记忆…')}</p><button class="secondary" data-action="account">打开账号设置</button>${libraryAccount?localCollection(archiveCacheKey(libraryAccount.id)).map(r=>`<article class="memory-entry"><p>${dateLabel(r.createdAt)} · 本机待同步副本</p><button class="plain-link" data-action="open-pending" data-id="${r.id}">查看卡牌与完整对话 ↗</button></article>`).join(''):''}`; return; }
   if (memoryTab === 'round') {
-    if (!state || !state.cards.length) { body.innerHTML='<div class="empty-state"><h3>从这一轮开始。</h3><p>选牌后，这里会记下卡片、你的表达和正在聊的问题。未选择保存前，只在本页临时使用。</p></div>'; return; }
+    if (!state || !state.cards.length) { body.innerHTML='<div class="empty-state"><h3>从这一轮开始。</h3><p>选牌后，这里会记下卡片、你的表达和正在聊的问题。抽到的卡牌与已发送对话会自动保存。</p></div>'; return; }
     const currentTurns = state.turns.filter(t=>t.card===state.activeCard);
     const lastUser = currentTurns.filter(t => t.role === 'user').at(-1);
     const last = currentTurns.at(-1);
-    body.innerHTML=`<p class="drawer-intro">本轮临时上下文：换卡片不清空，开始新一轮才重新整理。关闭页面后未保存内容不保留。</p><div class="context-card-images">${state.cards.map(n => `<img src="${cardURL(n)}" alt="${cardID(n)}">`).join('')}</div><dl><div class="context-row"><dt>本轮状态</dt><dd>${state.status === 'active' ? '探索中' : '已结束'} · 已抽 ${state.cards.length}/3 张</dd></div><div class="context-row"><dt>当前卡片</dt><dd>${cardID(state.activeCard)} · ${escapeHTML(pairLabel(state.activeCard))}</dd></div><div class="context-row"><dt>最近表达</dt><dd>${lastUser ? escapeHTML(lastUser.text) : '还没有个人表达'}</dd></div><div class="context-row"><dt>当前问题</dt><dd>${last.role === 'assistant' && last.question ? escapeHTML(last.question) : '当前没有待回答的新问题'}</dd></div></dl><h3 style="font:500 20px var(--serif);margin:25px 0 15px">按卡片回看原话</h3>${state.turns.filter(t => t.role === 'user').map(t => `<div class="memory-entry"><small>${cardID(t.card)}${escapeHTML(turnWordLabel(t))} · 本人表达</small><p>${escapeHTML(t.text)}</p></div>`).join('') || '<p class="drawer-intro">写下第一句联想，这里就会更新。</p>'}`;
+    body.innerHTML=`<p class="drawer-intro">本轮上下文：换卡片不清空；卡牌与已发送对话自动留档，未发送草稿不进入存档。</p><div class="context-card-images">${state.cards.map(n => `<img src="${cardURL(n)}" alt="${cardID(n)}">`).join('')}</div><dl><div class="context-row"><dt>本轮状态</dt><dd>${state.status === 'active' ? '探索中' : '已结束'} · 已抽 ${state.cards.length}/3 张</dd></div><div class="context-row"><dt>当前卡片</dt><dd>${cardID(state.activeCard)} · ${escapeHTML(pairLabel(state.activeCard))}</dd></div><div class="context-row"><dt>最近表达</dt><dd>${lastUser ? escapeHTML(lastUser.text) : '还没有个人表达'}</dd></div><div class="context-row"><dt>当前问题</dt><dd>${last.role === 'assistant' && last.question ? escapeHTML(last.question) : '当前没有待回答的新问题'}</dd></div></dl><h3 style="font:500 20px var(--serif);margin:25px 0 15px">按卡片回看原话</h3>${state.turns.filter(t => t.role === 'user').map(t => `<div class="memory-entry"><small>${cardID(t.card)}${escapeHTML(turnWordLabel(t))} · 本人表达</small><p>${escapeHTML(t.text)}</p></div>`).join('') || '<p class="drawer-intro">写下第一句联想，这里就会更新。</p>'}`;
   } else if (memoryTab === 'long') {
     body.innerHTML=`<p class="drawer-intro">只保留你主动选择的内容。修改后以最新说法为准，原话出处仍可查看。删除会停止将它作为跨轮记忆，但不会同时删除已保存回顾。</p>${memories.length ? memories.map(m => `<article class="memory-entry" data-memory-id="${m.id}"><p class="memory-text">${escapeHTML(m.text)}</p><small>${dateLabel(m.at)} · ${cardID(m.card)}${m.example ? ' · 演示记录，不作真人事实' : ' · 本人选择保留'}${m.updatedAt ? ' · 已修改' : ''}</small><details><summary>查看原话出处</summary><blockquote>${escapeHTML(m.source)}</blockquote><p>本轮原话 ${escapeHTML(m.turnId.slice(0,8))}${m.revisions.length ? ` · 已修改 ${m.revisions.length} 次` : ''}</p></details><div class="entry-actions"><button data-action="edit-memory" data-id="${m.id}">修改</button><button data-action="delete-request" data-kind="memory" data-id="${m.id}">删除</button></div></article>`).join('') : '<div class="empty-state"><h3>值得留下的，由你选。</h3><p>一轮结束后，勾选想留给下次参考的话，它们会出现在这里。AI 的猜测不会自动进入。</p></div>'}`;
   } else {
-    body.innerHTML=`<p class="drawer-intro">完整回顾单独保存，不等于把里面的每句话都作为长期记忆使用。</p>${savedReviews.length ? savedReviews.map(r => `<article class="memory-entry" data-review-id="${r.id}"><p>${dateLabel(r.createdAt)}${r.play_mode?` · ${PLAY_MODES[playMode(r)].name}`:""} 的探索</p><div class="saved-thumbnails">${r.cards.map(n=>`<img src="${cardURL(n)}" alt="${cardID(n)}">`).join('')}</div><small>${r.turns.some(t=>t.role==='user') && r.turns.filter(t=>t.role==='user').every(t=>t.example)?'演示记录 · 非本人经历 · ':''}${r.cards.length} 张图卡 · ${r.turns.filter(t=>t.role==='user').length} 条个人表达</small><div class="entry-actions"><button data-action="open-saved" data-id="${r.id}">展开回顾</button><button data-action="delete-request" data-kind="review" data-id="${r.id}">删除</button></div></article>`).join('') : '<div class="empty-state"><h3>这里还没有回顾。</h3><p>完成一轮后，选择“保存这轮回顾”，以后就可以再来看。</p></div>'}`;
+    body.innerHTML=`<p class="drawer-intro">每轮卡牌与已发送的完整对话自动留档；不等于把每句话都作为长期记忆使用。</p>${savedReviews.length ? savedReviews.map(r => `<article class="memory-entry" data-review-id="${r.id}"><p>${dateLabel(r.createdAt)}${r.play_mode?` · ${PLAY_MODES[playMode(r)].name}`:""} 的探索</p><div class="saved-thumbnails">${r.cards.map(n=>`<img src="${cardURL(n)}" alt="${cardID(n)}">`).join('')}</div><small>${r.turns.some(t=>t.role==='user') && r.turns.filter(t=>t.role==='user').every(t=>t.example)?'演示记录 · 非本人经历 · ':''}${r.status==='active'?'探索中 · ':''}${r.cards.length} 张图卡 · ${r.turns.filter(t=>t.role==='user').length} 条个人表达</small><div class="entry-actions"><button data-action="open-saved" data-id="${r.id}">展开回顾</button><button data-action="delete-request" data-kind="review" data-id="${r.id}">删除</button></div></article>`).join('') : '<div class="empty-state"><h3>这里还没有回顾。</h3><p>完成一轮后，选择“保存这轮回顾”，以后就可以再来看。</p></div>'}`;
   }
 }
 function savedReviewHTML(r) {
@@ -597,6 +644,7 @@ document.addEventListener('click', event => {
   else if (action === 'confirm-new') { closeDialog(target); newRound(target.dataset.example==='true'); }
   else if (action === 'save-memory') saveSelectedMemories();
   else if (action === 'save-review') saveReview();
+  else if (action === 'retry-save') { autosaveRound();retryArchives(); }
   else if (action === 'export-review') exportReview();
   else if (action === 'edit-memory') editMemory(target.dataset.id);
   else if (action === 'cancel-memory-edit') renderMemory();
@@ -610,10 +658,13 @@ document.addEventListener('click', event => {
   else if (action === 'delete-request') deleteRequest(target);
   else if (action === 'delete-confirm') {
     const kind=target.dataset.kind,id=target.dataset.id;
+    if(kind==='review'&&state?.id===id)state.autosaveStopped=true;
+    if(!libraryAccount&&kind==='review')roundSaver.stop(null,id);
     if (libraryAccount) { deleteCloud(kind,(kind==='memory'?memories:savedReviews).find(v=>v.id===id)); return; }
     const next=(kind==='memory' ? memories : savedReviews).filter(v=>v.id!==id);
     if (persist(kind==='memory'?memoryKey:reviewKey,next)) { if(kind==='memory') memories=next; else savedReviews=next; updateMemoryCount(); renderMemory(); toast('已删除这条记录。'); }
   }
+  else if(action==='open-pending'){const owner=libraryAccount?.id;if(!owner)return;const r=localCollection(archiveCacheKey(owner)).find(r=>r.id===target.dataset.id);if(r){openInfo(savedReviewHTML(r));$('#info-content').dataset.libraryOwner=owner;}}
   else if (action === 'open-saved') {
     const r=savedReviews.find(v=>v.id===target.dataset.id);
     if (!r) return;
@@ -621,7 +672,7 @@ document.addEventListener('click', event => {
     if(libraryAccount) $('#info-content').dataset.libraryOwner=libraryAccount.id;
   }
   else if (action === 'how') openInfo(`<p class="eyebrow">没有标准答案</p><h2>给一张图，留一点想象。</h2><ol><li>88 张牌背叠放在一起，每张露出一部分；悬停抬起后自己点选。</li><li>纯图卡不搭配字卡。图字探索先围绕图卡聊出感受、评价或故事，按自然探索及补充进度再进入字卡抽选，不按固定轮数。也可以点“只看图卡”跳过，或在聊天时“先不用字卡”。用自己的话说联想与感受，不必强行把词用上。</li><li>图字探索按“图→字→组合探索→下一张图”推进，不提供随时换图按钮；纯图卡沿同样的基础了解、探索与补充节奏，去掉字卡环节，右侧（手机底部）可随时抽下一张。两种模式均最多三张图，选过的位置不能再选。</li><li>本轮牌位不变，整轮结束后重新洗牌。想停时随时回顾、保存。</li></ol><p>图像没有固定牌意，不做人格计分。你可以直接在对话里纠正 AI，不需要给回答打分。</p><p><a href="skill/#L27" target="_blank" rel="noopener">查看当前引导规则 ↗</a></p>`);
-  else if (action === 'about') openInfo(`<p class="eyebrow">OH 卡交互展示版</p><h2>先体验它如何展开。</h2><p>本站提供“图字探索”和“纯图卡”两种玩法；纯图卡不搭配字卡。图字探索使用 88 张图卡及 88 张中文字卡清晰重排版。图卡与字卡分别独立洗牌，每张图先聊，形成线索并由你补充或修正后，再进入一张字卡的抽选；一轮最多三组，同类牌轮内不重复，可跳过或停用字卡。</p><p>“先看看怎么玩”展示虚构对话示例，不对应真实参与者；发送后由 DeepSeek 根据实际图卡、当前对话和引导规则实时回应。</p><p>未登录时，主动保存的记忆与回顾留在当前浏览器；登录后，主动保存的内容会写入你的私人账号，可跨设备查看。旧的本机记录不会自动上传，可在账号里选择复制。AI 对话会把本轮已揭示图卡、字卡及其使用状态、对话及本人选择留作参考的非示例记忆经 Supabase 转发至现有 AI 服务并交给 DeepSeek 处理。两个入口共用每天200次额度。邮箱账号与主动保存的记录由 Supabase 托管；各账号只能访问自己的记录。清除浏览器数据只移除本机记录，不会删除账号里的存档。</p><p>界面为原创展示设计；只借鉴参考站的轻量、逐步体验，不复制它的品牌和角色。图卡由站点所有者提供并确认具有对外展示授权。中文字卡沿用此前整理的四边字清晰重排版，不是原扫描图或经认证的官方版；<a href="words/source.json" target="_blank" rel="noopener">查看词表与素材来源</a>。</p>`);
+  else if (action === 'about') openInfo(`<p class="eyebrow">OH 卡交互展示版</p><h2>先体验它如何展开。</h2><p>本站提供“图字探索”和“纯图卡”两种玩法；纯图卡不搭配字卡。图字探索使用 88 张图卡及 88 张中文字卡清晰重排版。图卡与字卡分别独立洗牌，每张图先聊，形成线索并由你补充或修正后，再进入一张字卡的抽选；一轮最多三组，同类牌轮内不重复，可跳过或停用字卡。</p><p>“先看看怎么玩”展示虚构对话示例，不对应真实参与者；发送后由 DeepSeek 根据实际图卡、当前对话和引导规则实时回应。</p><p>新一轮的卡牌与已发送对话自动保存：未登录时留在当前浏览器，登录后开始的轮次同步到私人账号，可跨设备查看。未发送草稿不会上传。旧的本机记录不会自动上传，可在账号里选择复制。AI 对话会把本轮已揭示图卡、字卡及其使用状态、对话及本人选择留作参考的非示例记忆经 Supabase 转发至现有 AI 服务并交给 DeepSeek 处理。两个入口共用每天200次额度。邮箱账号与账号内的记录由 Supabase 托管；各账号只能访问自己的记录。清除浏览器数据只移除本机记录，不会删除账号里的存档。</p><p>界面为原创展示设计；只借鉴参考站的轻量、逐步体验，不复制它的品牌和角色。图卡由站点所有者提供并确认具有对外展示授权。中文字卡沿用此前整理的四边字清晰重排版，不是原扫描图或经认证的官方版；<a href="words/source.json" target="_blank" rel="noopener">查看词表与素材来源</a>。</p>`);
 });
 function renderModePicker() {
   for(const button of $$('[data-action=choose-mode]')) {
@@ -650,7 +701,7 @@ function refreshLibraryViews() {
 }
 function localCollection(key) { try { const v=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(v)?v:[]; } catch {return [];} }
 function libraryHome() {
-  const latest=[...savedReviews].sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt)).find(r=>validHomeCards(r.cards));
+  const latest=[...savedReviews].filter(r=>r.status!=='active').sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt)).find(r=>validHomeCards(r.cards));
   previousRoundCards=latest?[...latest.cards]:[];
   if (currentView==='home') renderHomeCards();
 }
@@ -670,11 +721,13 @@ async function deleteCloud(kind,item) {
   if(librarySaving||libraryLoading||libraryError||!item)return;
   const owner=libraryAccount?.id;librarySaving=true;
   try {
+    if(kind==='review'){await roundSaver.settle(owner,item.id);item=savedReviews.find(r=>r.id===item.id)||item;}
     const values=await window.OHAccounts.remove(kind,item);
+    if(kind==='review')roundSaver.stop(owner,item.id);
     if(libraryAccount?.id!==owner)return;
     if(kind==='memory')memories=values;else {savedReviews=values;libraryHome();}
     refreshLibraryViews();toast('已从你的账号删除。');
-  }catch(error){if(libraryAccount?.id===owner)toast(window.OHAccounts.error(error));}
+  }catch(error){if(kind==='review'&&state?.id===item.id)state.autosaveStopped=false;if(libraryAccount?.id===owner)toast(window.OHAccounts.error(error));}
   finally{librarySaving=false;}
 }
 window.addEventListener?.('oh-library-state',event=>{
@@ -688,7 +741,11 @@ window.addEventListener?.('oh-library-state',event=>{
     for(const pending of Object.values(state.replyRequests||{}))pending.controller.abort();
     state.pending=false;
   }
-  refreshLibraryViews();if(currentView==='home')renderHomeCards();
+  if(libraryAccount&&!detail.loading&&!detail.error){
+    for(const record of localCollection(archiveCacheKey(libraryAccount.id)))roundSaver.enqueue(libraryAccount.id,record);
+    roundSaver.retry(libraryAccount.id);
+  }
+  refreshLibraryViews();renderArchiveStatus();if(currentView==='home')renderHomeCards();
 });
 window.addEventListener?.('oh-library-import',()=>{
   if(!libraryAccount||libraryLoading||librarySaving)return;
@@ -709,3 +766,6 @@ document.addEventListener('click',async event=>{
  }catch(error){toast(window.OHAccounts.error(error));target.disabled=false;}
  finally{librarySaving=false;}
 });
+
+window.addEventListener?.('online',()=>{retryArchives();});
+window.addEventListener?.('pagehide',()=>{autosaveRound();});

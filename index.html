@@ -6,11 +6,11 @@
   <meta name="description" content="看见未见 OH 卡：从一张图开始，用自己的话探索。">
   <title>看见未见 · OH卡</title>
   <link rel="icon" type="image/svg+xml" href="assets/logo-oh-pages-15deg-v2.svg">
-  <link rel="stylesheet" href="styles.css?v=20261105-first-impression">
-  <link rel="stylesheet" href="mobile.css?v=20261105-first-impression">
+  <link rel="stylesheet" href="styles.css?v=20261105-autosave">
+  <link rel="stylesheet" href="mobile.css?v=20261105-autosave">
 </head>
 <body>
-<!-- Independent image/word decks. Private dialogue is saved only by visitor choice. -->
+<!-- Independent image/word decks. Sent dialogue auto-archives privately; drafts and hidden decks are not uploaded. -->
 <svg class="icon-defs" xmlns="http://www.w3.org/2000/svg"><defs>
  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
@@ -39,7 +39,7 @@
    <div id="messages" class="messages" aria-live="polite"></div>
    <div id="example-controls" class="example-controls" hidden><span>正在查看虚构对话示例</span><button class="small-primary" data-action="next-example">继续看示例 <svg><use href="#i-arrow"/></svg></button></div>
    <section id="word-step" class="word-step" aria-labelledby="word-title" hidden><header class="deck-heading"><div><p class="eyebrow">ANOTHER VIEW</p><h2 id="word-title">给这张图，抽一个词。</h2><p id="word-hint" class="deck-hint">88 张字卡，慢慢挑。</p></div></header><div class="deck-window" tabindex="0" role="region" aria-label="字卡牌叠，可左右滑动"><div id="word-grid" class="deck-grid" aria-label="叠放的全部 88 张字卡牌背"></div></div><footer class="deck-footer"><button class="text-button" data-action="skip-word">继续只看图卡</button><button id="word-confirm" class="primary deck-confirm" data-action="pick-word" type="button" hidden>选这张</button><strong id="word-count"></strong></footer></section>
-   <form id="message-form" class="composer"><label for="message-input" class="sr-only">你的联想</label><textarea id="message-input" placeholder="写下你注意到的，或此刻的感受……" rows="2" maxlength="3000"></textarea><div class="composer-bottom"><span>随便说说，也可以慢慢想。</span><button type="submit" aria-label="发送你的联想">发送<svg><use href="#i-arrow"/></svg></button></div></form>
+   <form id="message-form" class="composer"><label for="message-input" class="sr-only">你的联想</label><textarea id="message-input" placeholder="写下你注意到的，或此刻的感受……" rows="2" maxlength="3000"></textarea><div class="composer-bottom"><span>随便说说，也可以慢慢想。</span><button type="submit" aria-label="发送你的联想">发送<svg><use href="#i-arrow"/></svg></button></div></form><div class="autosave-indicator"><span id="autosave-status" role="status"></span><button id="retry-autosave" class="plain-link" data-action="retry-save" hidden>重试保存</button><button id="export-autosave" class="plain-link" data-action="export-review" hidden>导出本轮</button></div>
  </section><aside class="draw-rail" aria-label="继续抽卡" hidden><div class="rail-inner"><div class="tiny-stack" aria-hidden="true"><i></i><i></i><i></i></div><p class="rail-kicker">让联想继续</p><button id="draw-next" class="draw-next" data-action="draw"><svg><use href="#i-plus"/></svg><strong>再抽一张</strong><span id="draw-target">第 2 / 3 张</span></button><p id="draw-note">不用等聊完，<br>想抽就可以抽。</p><span class="rail-line"></span><button class="text-button rail-review" data-action="review"><span class="rail-review-label">先回顾这一轮 ↗</span><span class="mobile-only">回顾 ↗</span></button></div></aside></div>
 </main>
 <main id="review-view" class="view review-view" hidden></main>
@@ -51,7 +51,7 @@
 <dialog id="deck-dialog" class="deck-dialog" aria-labelledby="deck-title"><header class="deck-heading"><div><p class="eyebrow">CHOOSE YOUR CARD</p><h2 id="deck-title">从牌叠里，选一张。</h2><p id="deck-hint" class="deck-hint">88 张牌，慢慢挑。</p></div><button class="icon-button" data-action="close-dialog" aria-label="暂不选牌"><svg><use href="#i-close"/></svg></button></header><div class="deck-window" tabindex="0" role="region" aria-label="图卡牌叠，可左右滑动"><div id="deck-grid" class="deck-grid" aria-label="叠放的全部 88 张牌背，每张露出一部分"></div></div><footer class="deck-footer"><button id="deck-confirm" class="primary deck-confirm" data-action="pick-position" type="button" hidden>选这张</button><strong id="deck-count">已抽 0 / 3 张</strong></footer></dialog>
 
 <div id="toast" class="toast" role="status" hidden></div>
-<script type="module" src="account.bundle.js?v=20261105-first-impression"></script>
+<script type="module" src="account.bundle.js?v=20261105-autosave"></script>
 <script id="oh-runtime">window.OH_RUNTIME={liveAI:true,apiBase:"https://arpyrhxpsgpuzxoxsodd.supabase.co/functions/v1/oh-backup"};</script>
-<script type="module" src="app.js?v=20261105-first-impression"></script>
+<script type="module" src="app.js?v=20261105-autosave"></script>
 </body></html>
