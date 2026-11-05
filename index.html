@@ -6,8 +6,8 @@
   <meta name="description" content="看见未见 OH 卡：从一张图开始，用自己的话探索。">
   <title>看见未见 · OH卡</title>
   <link rel="icon" type="image/svg+xml" href="assets/logo-oh-pages-15deg-v2.svg">
-  <link rel="stylesheet" href="styles.css?v=20261105-play-modes">
-  <link rel="stylesheet" href="mobile.css?v=20261105-play-modes">
+  <link rel="stylesheet" href="styles.css?v=20261105-memory-nav">
+  <link rel="stylesheet" href="mobile.css?v=20261105-memory-nav">
 </head>
 <body>
 <!-- Independent image/word decks. Private dialogue is saved only by visitor choice. -->
@@ -22,7 +22,7 @@
 </defs></svg>
 <header class="site-header">
  <button class="brand" data-action="home" aria-label="看见未见首页"><img class="brand-mark" src="assets/logo-oh-pages-15deg-v2.svg" alt="" width="62" height="52"><span>看见未见<small>OH CARDS</small></span></button>
- <nav aria-label="主导航"><button class="text-button" data-action="how">怎么玩</button><button class="memory-button" data-action="memory"><svg><use href="#i-memory"/></svg>我的记忆<span id="memory-count" hidden></span></button><button id="account-button" class="text-button" type="button">登录 / 注册</button></nav>
+ <nav aria-label="主导航"><button class="text-button" data-action="how">怎么玩</button><button class="memory-button" data-action="memory" hidden><svg><use href="#i-memory"/></svg>我的记忆<span id="memory-count" hidden></span></button><button id="account-button" class="text-button" type="button">登录 / 注册</button></nav>
 </header>
 <main id="home-view" class="view home-view">
  <div class="home-copy"><p class="eyebrow"><span></span>给自己一点不着急的时间</p><h1 class="home-title"><span class="home-title-lead">从一张图开始，</span> <span class="home-title-main">聊聊最近的自己。</span></h1><div class="mode-picker" role="group" aria-label="选择玩法"><button type="button" data-action="choose-mode" data-mode="image_word" aria-pressed="true"><strong>图字探索</strong><span>先聊图，再配一个词</span></button><button type="button" data-action="choose-mode" data-mode="image_only" aria-pressed="false"><strong>纯图卡</strong><span>只看图，自由抽下一张</span></button></div><p id="mode-note" class="mode-note"></p><div class="hero-actions"><button id="home-start" class="primary" data-action="start">抽一张，开始聊<svg><use href="#i-arrow"/></svg></button><button class="example-link" data-action="example">先看看怎么玩 <span>↗</span></button></div></div>
@@ -51,7 +51,7 @@
 <dialog id="deck-dialog" class="deck-dialog" aria-labelledby="deck-title"><header class="deck-heading"><div><p class="eyebrow">CHOOSE YOUR CARD</p><h2 id="deck-title">从牌叠里，选一张。</h2><p id="deck-hint" class="deck-hint">88 张牌，慢慢挑。</p></div><button class="icon-button" data-action="close-dialog" aria-label="暂不选牌"><svg><use href="#i-close"/></svg></button></header><div class="deck-window" tabindex="0" role="region" aria-label="图卡牌叠，可左右滑动"><div id="deck-grid" class="deck-grid" aria-label="叠放的全部 88 张牌背，每张露出一部分"></div></div><footer class="deck-footer"><button id="deck-confirm" class="primary deck-confirm" data-action="pick-position" type="button" hidden>选这张</button><strong id="deck-count">已抽 0 / 3 张</strong></footer></dialog>
 
 <div id="toast" class="toast" role="status" hidden></div>
-<script type="module" src="account.bundle.js?v=20261105-play-modes"></script>
+<script type="module" src="account.bundle.js?v=20261105-memory-nav"></script>
 <script id="oh-runtime">window.OH_RUNTIME={liveAI:true,apiBase:"https://arpyrhxpsgpuzxoxsodd.supabase.co/functions/v1/oh-backup"};</script>
-<script type="module" src="app.js?v=20261105-play-modes"></script>
+<script type="module" src="app.js?v=20261105-memory-nav"></script>
 </body></html>

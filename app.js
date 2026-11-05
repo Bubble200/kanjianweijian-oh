@@ -508,7 +508,7 @@ function exportReview() {
   const anchor = document.createElement('a'); anchor.href=url; anchor.download=`看见未见-OH卡-${state.id.slice(0,8)}.txt`; anchor.click();
   setTimeout(() => URL.revokeObjectURL(url),1000);
 }
-function updateMemoryCount() { $('#memory-count').textContent=memories.length; $('#memory-count').hidden=!memories.length; }
+function updateMemoryCount() { $('.memory-button').hidden=!libraryAccount?.id; $('#memory-count').textContent=memories.length; $('#memory-count').hidden=!memories.length; }
 function openMemory() { renderMemory(); $('#memory-dialog').showModal(); }
 function renderMemory() {
   $('#memory-dialog .drawer-footer').textContent = libraryAccount ? `账号：${libraryAccount.email} · 主动保存后同步到云端。AI 仅参考你选择留下的非示例记忆。` : '当前为浏览器本机记录；登录后可保存到账号并跨设备查看。';
