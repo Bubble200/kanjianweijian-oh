@@ -1,0 +1,4 @@
+Noto Serif SC — Google Fonts / notofonts/noto-cjk
+SIL Open Font License 1.1, see OFL.txt.
+Homepage glyph subset fetched from fonts.googleapis.com on 2026-11-06.
+Weights 400, 500, 700, 900. Self-hosted to avoid a runtime Google Fonts dependency.

@@ -8,7 +8,6 @@ body[data-dusk="on"]:has(#home-view:not([hidden]))>.dusk-backdrop{display:block}
 .dusk-backdrop iframe{width:100%;height:100%;border:0;display:block}
 .dusk-backdrop::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#fff5ea65,#fff3e719 73%);}
 body[data-dusk="on"] .home-view .composition-note>span{color:#4e3b53}
-@media(max-width:720px){.dusk-backdrop::after{background:#fff5ea37}}
 
 /* Translucent watercolor capsules; each is a direct entry, not a selected tab. */
 .home-view .mode-picker {
@@ -62,10 +61,41 @@ body[data-dusk="on"] .home-view .composition-note>span{color:#4e3b53}
   outline-offset: 5px;
 }
 @media (max-width: 720px) {
-  .home-view .mode-picker { max-width: 304px; gap: 14px; margin-top: 16px; }
-  .home-view .mode-picker > button { min-height: 56px; padding: 6px; }
-  .home-view .mode-picker strong { font-size: 16px; }
-  .home-view .home-bottom { margin-top: 26px; }
+  @font-face { font-family: "OH Home Serif"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/home-serif-400.ttf") format("truetype"); }
+  @font-face { font-family: "OH Home Serif"; font-style: normal; font-weight: 500; font-display: swap; src: url("fonts/home-serif-500.ttf") format("truetype"); }
+  @font-face { font-family: "OH Home Serif"; font-style: normal; font-weight: 700; font-display: swap; src: url("fonts/home-serif-700.ttf") format("truetype"); }
+  @font-face { font-family: "OH Home Serif"; font-style: normal; font-weight: 900; font-display: swap; src: url("fonts/home-serif-900.ttf") format("truetype"); }
+
+  /* Preserve the desktop's two-beat title, with a real serif on iOS as well. */
+  body:has(#home-view:not([hidden])) .brand,
+  .home-view { --serif: "OH Home Serif", "Songti SC", serif; font-synthesis: none; }
+  body:has(#home-view:not([hidden])) .site-header { height: 78px; }
+  body:has(#home-view:not([hidden])) .brand { font-weight: 700; font-size: 20px; }
+  .home-view { padding: 16px 24px 0; }
+  .home-view .home-copy .eyebrow { width: 100%; align-self: start; justify-content: flex-start; text-align: left; font-size: 11px; letter-spacing: 1.2px; }
+  .home-view .home-title { width: 100%; margin: 18px 0 0; gap: 8px; justify-items: start; text-align: left; }
+  .home-title-lead { font-size: clamp(23px, 6.3vw, 29px); font-weight: 400; line-height: 1.45; }
+  .home-title-main { margin-inline-start: .34em; font-size: clamp(28px, 7.6vw, 36px); font-weight: 500; line-height: 1.4; letter-spacing: .015em; white-space: nowrap; }
+
+  /* Compact fan above a separate caption lane; the caption cannot sit under a card. */
+  .home-view .card-composition { width: 100%; max-width: 330px; height: clamp(294px, 85vw, 338px); margin: 18px auto 0; }
+  .home-view .fan-front { width: 54%; left: 22%; top: 20px; padding: 8px 8px 0; }
+  .home-view .fan-back-one { width: 43%; left: 5%; top: 55px; }
+  .home-view .fan-back-two { width: 43%; right: 3%; top: 14px; }
+  .home-view .fan-card { box-shadow: 3px 10px 18px -9px #342d4866, 0 2px 4px #342d481c; }
+  .home-view .orbit-label { inset: auto 0 0; transform: none; text-align: center; font: 400 13px/1.8 var(--serif); letter-spacing: .08em; color: #493b50; }
+  .home-view .mode-picker { max-width: 304px; gap: 14px; margin-top: 20px; }
+  .home-view .mode-picker > button { min-height: 52px; padding: 6px; border-color: #fffaffb0; background: linear-gradient(145deg, #fffaff59, #eee8f233); }
+  .home-view .mode-picker strong { font-size: 16px; font-weight: 900; -webkit-text-stroke: 0; }
+  .home-view .mode-note:empty { display: none; }
+  .home-view .home-bottom { margin-top: 28px; padding: 18px 0 22px; }
+  .dusk-backdrop iframe { filter: saturate(1.38) contrast(1.06); }
+  .dusk-backdrop::after { background: linear-gradient(180deg, #fff4fc15, transparent 45%, #fff4fc0a); }
+}
+@media (max-width: 359px) {
+  body:has(#home-view:not([hidden])) .brand { font-size: 18px; }
+  .home-view { padding-inline: 20px; }
+  .home-title-main { margin-inline-start: .25em; font-size: 27px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .home-view .mode-picker > button:not(:disabled):hover,
