@@ -106,7 +106,7 @@ function newRound(example = false, mode = selectedPlayMode) {
 function showView(name) {
   currentView = name;
   for (const view of ['home','session','review']) $(`#${view}-view`).hidden = name !== view;
-  if (name === 'home') { renderResumeButton(); renderHomeCards(); }
+  if (name === 'home') { renderHomeEntry(); renderHomeCards(); }
   window.scrollTo({top:0, behavior:'instant'});
 }
 function validHomeCards(cards) {
@@ -189,7 +189,7 @@ function wordFor(card, pairs = state?.pairings) {
   return WORD_DECK.cards.find(w=>w.id===pairs?.[card]?.word_id);
 }
 function pairLabel(card, pairs = state?.pairings, mode = state?.play_mode) {
-  if(mode==='image_only')return '纯图卡';
+  if(mode==='image_only')return '图卡';
   const p=pairs?.[card], w=wordFor(card,pairs);
   return w ? `字卡「${w.text}」${p.status==='removed' ? '（已停用）' : ''}` : ['image_only','ready','pending'].includes(p?.status) ? '尚未抽字卡' : '只看图卡';
 }
@@ -596,7 +596,7 @@ document.addEventListener('click', event => {
   const action=target.dataset.action;
   if (action === 'close-dialog') closeDialog(target);
   else if (action === 'home' || action === 'leave') {
-    if (state?.status === 'active') { showView('home'); toast('本轮仍保留在页面中，可以继续。'); renderResumeButton(); }
+    if (state?.status === 'active') { showView('home'); toast('本轮仍保留在页面中，可以继续。'); renderHomeEntry(); }
     else showView('home');
   }
   else if (action === 'start') askToRestart(false);
@@ -618,11 +618,16 @@ document.addEventListener('click', event => {
       peekCard('image',position);
     } else revealPosition(position);
   }
-  else if (action === 'choose-mode') {
-    if((state?.status==='active'&&state.cards.length>0)||!PLAY_MODES[target.dataset.mode])return;
-    selectedPlayMode=target.dataset.mode;
-    if(state?.status==='active'&&!state.cards.length)state=null;
-    renderResumeButton();
+  else if (action === 'enter-mode') {
+    const mode = target.dataset.mode;
+    if (!PLAY_MODES[mode]) return;
+    const active = state?.status === 'active';
+    if (active && state.cards.length && playMode(state) !== mode) return;
+    selectedPlayMode = mode;
+    if (active && playMode(state) === mode) {
+      if (!state.cards.length) openDeck();
+      else { showView('session'); renderSession(); }
+    } else askToRestart(false);
   }
   else if (action === 'next-example') nextExample();
   else if (action === 'select-card') { state.activeCard=Number(target.dataset.card); $('#message-input').value=state.drafts[state.activeCard] || ''; renderSession(); }
@@ -671,26 +676,26 @@ document.addEventListener('click', event => {
     openInfo(savedReviewHTML(r));
     if(libraryAccount) $('#info-content').dataset.libraryOwner=libraryAccount.id;
   }
-  else if (action === 'how') openInfo(`<p class="eyebrow">没有标准答案</p><h2>给一张图，留一点想象。</h2><ol><li>88 张牌背叠放在一起，每张露出一部分；悬停抬起后自己点选。</li><li>纯图卡不搭配字卡。图字探索先围绕图卡聊出感受、评价或故事，按自然探索及补充进度再进入字卡抽选，不按固定轮数。也可以点“只看图卡”跳过，或在聊天时“先不用字卡”。用自己的话说联想与感受，不必强行把词用上。</li><li>图字探索按“图→字→组合探索→下一张图”推进，不提供随时换图按钮；纯图卡沿同样的基础了解、探索与补充节奏，去掉字卡环节，右侧（手机底部）可随时抽下一张。两种模式均最多三张图，选过的位置不能再选。</li><li>本轮牌位不变，整轮结束后重新洗牌。想停时随时回顾、保存。</li></ol><p>图像没有固定牌意，不做人格计分。你可以直接在对话里纠正 AI，不需要给回答打分。</p><p><a href="skill/#L27" target="_blank" rel="noopener">查看当前引导规则 ↗</a></p>`);
-  else if (action === 'about') openInfo(`<p class="eyebrow">OH 卡交互展示版</p><h2>先体验它如何展开。</h2><p>本站提供“图字探索”和“纯图卡”两种玩法；纯图卡不搭配字卡。图字探索使用 88 张图卡及 88 张中文字卡清晰重排版。图卡与字卡分别独立洗牌，每张图先聊，形成线索并由你补充或修正后，再进入一张字卡的抽选；一轮最多三组，同类牌轮内不重复，可跳过或停用字卡。</p><p>“先看看怎么玩”展示虚构对话示例，不对应真实参与者；发送后由 DeepSeek 根据实际图卡、当前对话和引导规则实时回应。</p><p>新一轮的卡牌与已发送对话自动保存：未登录时留在当前浏览器，登录后开始的轮次同步到私人账号，可跨设备查看。未发送草稿不会上传。旧的本机记录不会自动上传，可在账号里选择复制。AI 对话会把本轮已揭示图卡、字卡及其使用状态、对话及本人选择留作参考的非示例记忆经 Supabase 转发至现有 AI 服务并交给 DeepSeek 处理。两个入口共用每天200次额度。邮箱账号与账号内的记录由 Supabase 托管；各账号只能访问自己的记录。清除浏览器数据只移除本机记录，不会删除账号里的存档。</p><p>界面为原创展示设计；只借鉴参考站的轻量、逐步体验，不复制它的品牌和角色。图卡由站点所有者提供并确认具有对外展示授权。中文字卡沿用此前整理的四边字清晰重排版，不是原扫描图或经认证的官方版；<a href="words/source.json" target="_blank" rel="noopener">查看词表与素材来源</a>。</p>`);
+  else if (action === 'how') openInfo(`<p class="eyebrow">没有标准答案</p><h2>给一张图，留一点想象。</h2><ol><li>88 张牌背叠放在一起，每张露出一部分；悬停抬起后自己点选。</li><li>图卡不搭配字卡。图字探索先围绕图卡聊出感受、评价或故事，按自然探索及补充进度再进入字卡抽选，不按固定轮数。也可以点“只看图卡”跳过，或在聊天时“先不用字卡”。用自己的话说联想与感受，不必强行把词用上。</li><li>图字探索按“图→字→组合探索→下一张图”推进，不提供随时换图按钮；图卡沿同样的基础了解、探索与补充节奏，去掉字卡环节，右侧（手机底部）可随时抽下一张。两种模式均最多三张图，选过的位置不能再选。</li><li>本轮牌位不变，整轮结束后重新洗牌。想停时随时回顾、保存。</li></ol><p>图像没有固定牌意，不做人格计分。你可以直接在对话里纠正 AI，不需要给回答打分。</p><p><a href="skill/#L27" target="_blank" rel="noopener">查看当前引导规则 ↗</a></p>`);
+  else if (action === 'about') openInfo(`<p class="eyebrow">OH 卡交互展示版</p><h2>先体验它如何展开。</h2><p>本站提供“图字探索”和“图卡”两种玩法；图卡不搭配字卡。图字探索使用 88 张图卡及 88 张中文字卡清晰重排版。图卡与字卡分别独立洗牌，每张图先聊，形成线索并由你补充或修正后，再进入一张字卡的抽选；一轮最多三组，同类牌轮内不重复，可跳过或停用字卡。</p><p>发送后由 DeepSeek 根据实际图卡、当前对话和引导规则实时回应。</p><p>新一轮的卡牌与已发送对话自动保存：未登录时留在当前浏览器，登录后开始的轮次同步到私人账号，可跨设备查看。未发送草稿不会上传。旧的本机记录不会自动上传，可在账号里选择复制。AI 对话会把本轮已揭示图卡、字卡及其使用状态、对话及本人选择留作参考的非示例记忆经 Supabase 转发至现有 AI 服务并交给 DeepSeek 处理。两个入口共用每天200次额度。邮箱账号与账号内的记录由 Supabase 托管；各账号只能访问自己的记录。清除浏览器数据只移除本机记录，不会删除账号里的存档。</p><p>界面为原创展示设计；只借鉴参考站的轻量、逐步体验，不复制它的品牌和角色。图卡由站点所有者提供并确认具有对外展示授权。中文字卡沿用此前整理的四边字清晰重排版，不是原扫描图或经认证的官方版；<a href="words/source.json" target="_blank" rel="noopener">查看词表与素材来源</a>。</p>`);
 });
-function renderModePicker() {
-  for(const button of $$('[data-action=choose-mode]')) {
-    button.setAttribute('aria-pressed',String(button.dataset.mode===selectedPlayMode));
-    button.disabled=state?.status==='active'&&state.cards.length>0;
+function renderHomeEntry() {
+  const active = state?.status === 'active';
+  for (const button of $$('[data-action=enter-mode]')) {
+    const resumes = active && button.dataset.mode === playMode(state);
+    button.disabled = Boolean(active && state.cards.length && !resumes);
+    const title = $('strong', button).textContent;
+    button.setAttribute('aria-label', resumes
+      ? `${title}，${state.cards.length ? '继续这一轮' : '继续选卡'}`
+      : title);
   }
-  $('#mode-note').textContent=state?.status==='active'&&state.cards.length>0?`本轮为${PLAY_MODES[playMode(state)].name}，结束后可切换玩法。`:'';
+  $('#mode-note').textContent = active && state.cards.length
+    ? `本轮为${PLAY_MODES[playMode(state)].name}，结束后可切换玩法。` : '';
 }
-function renderResumeButton() {
-  renderModePicker();
-  const primary=$('#home-start'), active=state?.status==='active';
-  primary.dataset.action=active ? 'resume' : 'start';
-  primary.innerHTML=`${active ? (state.cards.length ? '继续这一轮' : '继续选卡') : '抽一张，开始聊'} ${icon('arrow')}`;
-}
-$('#deck-dialog').addEventListener('close', () => { if(currentView==='home') renderResumeButton(); });
+$('#deck-dialog').addEventListener('close', () => { if(currentView==='home') renderHomeEntry(); });
 for (const dialog of $$('dialog')) dialog.addEventListener('click', event => { if (event.target === dialog) { const r=dialog.getBoundingClientRect(); if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom) dialog.close(); } });
 updateMemoryCount();
-renderModePicker();
+renderHomeEntry();
 renderHomeCards();
 
 // Account libraries never replace the anonymous local copy or an ongoing round.

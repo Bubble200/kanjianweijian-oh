@@ -1,0 +1,73 @@
+/* Isolated preview layer; all existing page controls remain above it. */
+body[data-dusk="on"]:has(#home-view:not([hidden])){
+ isolation:isolate;
+ background:#e8dce5;
+}
+.dusk-backdrop{display:none;position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+body[data-dusk="on"]:has(#home-view:not([hidden]))>.dusk-backdrop{display:block}
+.dusk-backdrop iframe{width:100%;height:100%;border:0;display:block}
+.dusk-backdrop::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#fff5ea65,#fff3e719 73%);}
+body[data-dusk="on"] .home-view .composition-note>span{color:#4e3b53}
+@media(max-width:720px){.dusk-backdrop::after{background:#fff5ea37}}
+
+/* Translucent watercolor capsules; each is a direct entry, not a selected tab. */
+.home-view .mode-picker {
+  --entry-ink: #483751;
+  max-width: 304px;
+  gap: 14px;
+  margin-top: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.home-view .mode-picker > button {
+  position: relative;
+  min-height: 56px;
+  padding: 6px 10px;
+  border: 1px solid #fffaff80;
+  border-radius: 999px;
+  text-align: center;
+  color: var(--entry-ink);
+  background: linear-gradient(145deg, #fffaff45, #eee8f226);
+  box-shadow: 0 4px 12px #57436114, inset 0 1px 0 #ffffff66;
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+  touch-action: manipulation;
+}
+.home-view .mode-picker > button > svg {
+  display: none;
+}
+@media (hover: hover) {
+  .home-view .mode-picker > button:not(:disabled):hover {
+    transform: translateY(-2px);
+    background: linear-gradient(145deg, #fffaff66, #f0eaf63d);
+    box-shadow: 0 6px 16px #57436120, inset 0 1px 0 #ffffff80;
+  }
+}
+.home-view .mode-picker > button:not(:disabled):active {
+  transform: translateY(1px);
+  background: #eee8f233;
+  box-shadow: inset 0 2px 5px #75628120;
+}
+.home-view .mode-picker > button:disabled {
+  opacity: .5;
+  box-shadow: none;
+}
+.home-view .mode-picker strong {
+  font: 900 16px/1.4 var(--serif);
+  -webkit-text-stroke: .3px currentColor;
+  letter-spacing: 1px;
+}
+.home-view .mode-picker > button:focus-visible {
+  outline: 2px solid #655479;
+  outline-offset: 5px;
+}
+@media (max-width: 720px) {
+  .home-view .mode-picker { max-width: 304px; gap: 14px; margin-top: 16px; }
+  .home-view .mode-picker > button { min-height: 56px; padding: 6px; }
+  .home-view .mode-picker strong { font-size: 16px; }
+  .home-view .home-bottom { margin-top: 26px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-view .mode-picker > button:not(:disabled):hover,
+  .home-view .mode-picker > button:not(:disabled):active { transform: none; }
+}
