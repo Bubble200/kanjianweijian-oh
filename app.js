@@ -88,7 +88,8 @@ function shuffledCards(items = Array.from({length:88}, (_, i) => i + 1)) {
   for (let i = cards.length - 1; i > 0; i--) { const j = randomBelow(i + 1); [cards[i], cards[j]] = [cards[j], cards[i]]; }
   return cards;
 }
-function newRound(example = false, mode = selectedPlayMode) {
+function newRound(example = false, mode = selectedPlayMode, revisitCard = null) {
+  if(revisitCard!==null&&(!Number.isInteger(revisitCard)||revisitCard<1||revisitCard>88))return;
   if(state?.cards.length&&state.status==='active'){state.status='ended';autosaveRound();}
   for (const pending of Object.values(state?.replyRequests || {})) pending.controller.abort();
   const deck = preparedDeck || shuffledCards();
@@ -101,7 +102,7 @@ function newRound(example = false, mode = selectedPlayMode) {
   if (example) {
     revealPosition(0);
     state.turns.push({...exampleTurns[0], id:crypto.randomUUID(), card:25, example:true}); state.exampleStep = 1; renderSession();
-  } else { showView('home'); openDeck(); }
+  } else { showView('home'); openDeck(); if(revisitCard!==null)revealPosition(state.deck.indexOf(revisitCard)); }
 }
 function showView(name) {
   currentView = name;
@@ -458,7 +459,7 @@ async function startLiveReply(card) {
   round.replyRequests[card]={id:requestId,controller};delete round.replyErrors[card];renderSession();
   const payload={play_mode:playMode(round),session_id:round.id,request_id:requestId,input_revision:revision,active_card:card,current_turn_id:lastUser.id,cards:[...round.cards],
     word_pairs:round.cards.map(n=>({card:n,...wordContext(n)})),
-    turns:round.turns.map(t=>({id:t.id,role:t.role,card:t.card,text:t.text,example:Boolean(t.example),...(t.reply_to?{reply_to:t.reply_to,reply_action:t.reply_action}:{}),...(t.basic_answers?{basic_answers:t.basic_answers}:{}),...(t.other_feelings_invitation!==undefined?{other_feelings_invitation:t.other_feelings_invitation}:{}),...(t.word_context?{word_context:t.word_context}:{})})),
+    turns:round.turns.map(t=>({id:t.id,role:t.role,card:t.card,text:t.text,example:Boolean(t.example),...(t.reply_to?{reply_to:t.reply_to,reply_action:t.reply_action}:{}),...(t.basic_answers?{basic_answers:t.basic_answers}:{}),...(t.real_life_reference?{real_life_reference:t.real_life_reference}:{}),...(t.other_feelings_invitation!==undefined?{other_feelings_invitation:t.other_feelings_invitation}:{}),...(t.word_context?{word_context:t.word_context}:{})})),
     memories:memories.filter(m=>!m.example).map(m=>({id:m.id,text:m.text})),
     existing_claims:round.turns.filter(t=>t.claimId&&t.hypothesis).map(t=>({id:t.claimId,card:t.card,text:t.hypothesis,status:t.claimState||'proposed'}))};
   try {
@@ -469,7 +470,7 @@ async function startLiveReply(card) {
     if(controller.signal.aborted||(libraryAccount?.id || null)!==accountOwner||state!==round||round.status!=='active'||round.revisions[card]!==revision||data.session_id!==round.id||data.input_revision!==revision||data.request_id!==requestId)return;
     const answer=formatAssistantReply(data.message,data.question);
     const rule=data.rules?.[0],claim=data.claims?.[0];
-    round.turns.push({id:crypto.randomUUID(),role:'assistant',text:answer,card,reply_to:lastUser.id,reply_action:data.next_action,word_transition:data.word_transition,image_transition:data.image_transition,review_transition:data.review_transition,other_feelings_invitation:data.other_feelings_invitation,basic_answers:data.basic_answers,word_context:wordContext(card),at:new Date().toISOString(),origin:data.trace?.provider==='program'?'玩法转场':'DeepSeek 实时回应',question:data.question,
+    round.turns.push({id:crypto.randomUUID(),role:'assistant',text:answer,card,reply_to:lastUser.id,reply_action:data.next_action,word_transition:data.word_transition,image_transition:data.image_transition,review_transition:data.review_transition,other_feelings_invitation:data.other_feelings_invitation,basic_answers:data.basic_answers,real_life_reference:data.real_life_reference,word_context:wordContext(card),at:new Date().toISOString(),origin:data.trace?.provider==='program'?'玩法转场':'DeepSeek 实时回应',question:data.question,
       quotes:data.evidence.map(e=>e.quote),basis:data.basis,ruleLine:rule?.line||53,ruleName:rule?.name||'围绕原话回应',
       usedRules:data.rules,claimId:claim?.id,hypothesis:claim?.text,claimState:claim?'proposed':undefined,claimOrigin:claim?.origin,claimScope:claim?.scope,audit:data.trace});
     if(!imageOnlyMode(round) && round.pairings[card]?.status==='image_only' && data.word_transition?.ready===true && !['pause','end'].includes(data.next_action)) round.pairings[card]={status:'ready',transition:data.word_transition};
@@ -599,6 +600,7 @@ document.addEventListener('click', event => {
     if (state?.status === 'active') { showView('home'); toast('本轮仍保留在页面中，可以继续。'); renderHomeEntry(); }
     else showView('home');
   }
+  else if (action === 'revisit-card') { closeDialog(target); newRound(false,selectedPlayMode,Number(target.dataset.card)); }
   else if (action === 'start') askToRestart(false);
   else if (action === 'resume') { if(!state.cards.length) openDeck(); else { showView('session'); renderSession(); } }
   else if (action === 'example') askToRestart(true);
@@ -774,3 +776,10 @@ document.addEventListener('click',async event=>{
 
 window.addEventListener?.('online',()=>{retryArchives();});
 window.addEventListener?.('pagehide',()=>{autosaveRound();});
+
+// Explicit same-card re-exploration: a new round, not a simulated random draw.
+const revisitValue=new URLSearchParams(window.location?.search||'').get('revisit');
+if(revisitValue&&/^(?:[1-9]|[1-7][0-9]|8[0-8])$/.test(revisitValue)){
+ const card=Number(revisitValue);
+ openInfo(`<p class="eyebrow">重新探索 · ${cardID(card)}</p><h2>再看一次这张图</h2><p>开启新一轮，原来的对话仍保留。</p><button class="primary" data-action="revisit-card" data-card="${card}">开始新的探索</button>`);
+}
