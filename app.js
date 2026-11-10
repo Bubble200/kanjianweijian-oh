@@ -221,7 +221,7 @@ function revealWord(position) {
   state.wordPicks.push({card:state.activeCard,word_id:word.id,position,at:new Date().toISOString()});
   state.pairings[state.activeCard]={...state.pairings[state.activeCard],status:'paired',word_id:word.id};
   $('#word-step').hidden=true;
-  const question='加上这个词再看这张图，你有没有什么新的联想？';
+  const question='加上这个词再看这张图，你有没有什么新的感受或联想？';
   addTurn('assistant',question,{question,basis:'保留你抽字前对图卡的表达，再听这个词带来什么变化；不把字卡当作你的感受或特质。',ruleLine:55,ruleName:'个人赋义优先',origin:'图字联想引导'});
   renderSession();
   // The revealed combination belongs to its place in the conversation; the original image stays above.
