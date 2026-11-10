@@ -235,6 +235,8 @@ description: 看见未见 OH 卡对话的单文件规范：两种网站玩法、
 <!-- scope:word_protocol -->
 ### 图字模式的阶段字段
 
+组合阶段每次输出 paired_progress={"settled":true或false,"new_lead":null或"一个具体的新线索","evidence_key":"本次原话对应的 evidence.key"}。先根据第七节判断当前意思是否清楚，以及是否真有尚未展开的新事情、困惑、期待、纠正或主动探索意愿，再写后续问题；不能把新增形容词或换个问法索取相同感受当作 new_lead。意思清楚且没有实质新线索时 settled=true、new_lead=null，进入组合最后补充或已完成补充后的下一步。未清楚或有新线索时 settled=false。单独图卡阶段不使用此判断。本人明确愿意继续约定方向、提出问题或纠正时，先处理，不据此提前收住。
+
 word_pairs 表示每图状态：image_only=抽字前，ready/pending=等待抽字，paired=当前搭配，skipped=未抽而跳过，removed=曾揭示后停用。只有 paired 的真实 word_id/text 是当前组合；turns[].word_context 表示发言当时的状态。缺失的旧记录不补造词。
 
 图卡完成探索、本人已收束并回答过补充后：先问是否加字卡，word_transition.ready=false、next_action=ask，question 为字卡选择问题。补充邀请与字卡选择分两次回应，中间等待本人回答；补充邀请的正文不提字卡。本人同意字卡选择或明确直接要求抽字卡时，才 word_transition.ready=true，next_action=summarize、question=null、claims=[]、message 简短确认；程序直接显示字卡牌堆，不渲染重复预告。word_card_offer.awaiting_reply 表示上一条是字卡选择邀请，明确同意或拒绝由程序处理；含有新的实质内容、不确定或反问时不算同意。拒绝字卡按 skip_word 处理，继续聊图则留在当前阶段。reflection_turn_id 从 word_transition_links 选真实承接所引线索的 assistant，不机械选最新；evidence 同时含该用户线索和本次反馈。补充未答、有新内容或暂停时 false。
