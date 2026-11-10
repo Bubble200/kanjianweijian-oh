@@ -309,7 +309,7 @@ function renderWordPair(card,wordId) {
   return `<figure class="conversation-pair" aria-label="图字组合 ${cardID(card)} · ${escapeHTML(word.text)}">
     <div class="card-pair is-paired"><img class="word-frame" src="${word.asset}" alt="字卡：${escapeHTML(word.text)}">
       <button class="current-card" data-action="zoom-pair" data-card="${card}" data-word="${word.id}" aria-label="放大图字组合：${escapeHTML(word.text)}"><img src="${cardURL(card)}" alt="图卡 ${cardID(card)}"><span class="zoom-hint">${icon('expand')}放大看</span></button>
-    </div><figcaption class="word-status"><span>字卡 · <strong>${escapeHTML(word.text)}</strong>${active?'':' <small>已停用 · 历史组合</small>'}</span>${active&&state.status==='active'?'<button class="text-button" data-action="remove-word">先不用字卡</button>':''}</figcaption>
+    </div><figcaption class="word-status"><span>字卡 · <strong>${escapeHTML(word.text)}</strong>${active?'':' <small>已停用 · 历史组合</small>'}</span></figcaption>
   </figure>`;
 }
 function openCardZoom(card,wordId=null) {
@@ -678,7 +678,7 @@ document.addEventListener('click', event => {
     openInfo(savedReviewHTML(r));
     if(libraryAccount) $('#info-content').dataset.libraryOwner=libraryAccount.id;
   }
-  else if (action === 'how') openInfo(`<p class="eyebrow">没有标准答案</p><h2>给一张图，留一点想象。</h2><ol><li>88 张牌背叠放在一起，每张露出一部分；悬停抬起后自己点选。</li><li>图卡不搭配字卡。图字探索先围绕图卡聊出感受、评价或故事，按自然探索及补充进度再进入字卡抽选，不按固定轮数。也可以点“只看图卡”跳过，或在聊天时“先不用字卡”。用自己的话说联想与感受，不必强行把词用上。</li><li>图字探索按“图→字→组合探索→下一张图”推进，不提供随时换图按钮；图卡沿同样的基础了解、探索与补充节奏，去掉字卡环节，右侧（手机底部）可随时抽下一张。两种模式均最多三张图，选过的位置不能再选。</li><li>本轮牌位不变，整轮结束后重新洗牌。想停时随时回顾、保存。</li></ol><p>图像没有固定牌意，不做人格计分。你可以直接在对话里纠正 AI，不需要给回答打分。</p><p><a href="skill/#L27" target="_blank" rel="noopener">查看当前引导规则 ↗</a></p>`);
+  else if (action === 'how') openInfo(`<p class="eyebrow">没有标准答案</p><h2>给一张图，留一点想象。</h2><ol><li>88 张牌背叠放在一起，每张露出一部分；悬停抬起后自己点选。</li><li>图卡不搭配字卡。图字探索先围绕图卡聊出感受、评价或故事，按自然探索及补充进度再进入字卡抽选，不按固定轮数。也可以点“只看图卡”跳过，或在对话里说明不想搭配字卡。用自己的话说联想与感受，不必强行把词用上。</li><li>图字探索按“图→字→组合探索→下一张图”推进，不提供随时换图按钮；图卡沿同样的基础了解、探索与补充节奏，去掉字卡环节，右侧（手机底部）可随时抽下一张。两种模式均最多三张图，选过的位置不能再选。</li><li>本轮牌位不变，整轮结束后重新洗牌。想停时随时回顾、保存。</li></ol><p>图像没有固定牌意，不做人格计分。你可以直接在对话里纠正 AI，不需要给回答打分。</p><p><a href="skill/#L27" target="_blank" rel="noopener">查看当前引导规则 ↗</a></p>`);
   else if (action === 'about') openInfo(`<p class="eyebrow">OH 卡交互展示版</p><h2>先体验它如何展开。</h2><p>本站提供“图字探索”和“图卡”两种玩法；图卡不搭配字卡。图字探索使用 88 张图卡及 88 张中文字卡清晰重排版。图卡与字卡分别独立洗牌，每张图先聊，形成线索并由你补充或修正后，再进入一张字卡的抽选；一轮最多三组，同类牌轮内不重复，可跳过或停用字卡。</p><p>发送后由 DeepSeek 根据实际图卡、当前对话和引导规则实时回应。</p><p>新一轮的卡牌与已发送对话自动保存：未登录时留在当前浏览器，登录后开始的轮次同步到私人账号，可跨设备查看。未发送草稿不会上传。旧的本机记录不会自动上传，可在账号里选择复制。AI 对话会把本轮已揭示图卡、字卡及其使用状态、对话及本人选择留作参考的非示例记忆经 Supabase 转发至现有 AI 服务并交给 DeepSeek 处理。两个入口共用每天200次额度。邮箱账号与账号内的记录由 Supabase 托管；各账号只能访问自己的记录。清除浏览器数据只移除本机记录，不会删除账号里的存档。</p><p>界面为原创展示设计；只借鉴参考站的轻量、逐步体验，不复制它的品牌和角色。图卡由站点所有者提供并确认具有对外展示授权。中文字卡沿用此前整理的四边字清晰重排版，不是原扫描图或经认证的官方版；<a href="words/source.json" target="_blank" rel="noopener">查看词表与素材来源</a>。</p>`);
 });
 function renderHomeEntry() {
