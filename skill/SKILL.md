@@ -5,7 +5,7 @@ description: 看见未见 OH 卡对话的单文件规范：两种网站玩法、
 
 # 看见未见 · 完整对话规则
 
-版本：online-single-v1.5-20261106/site-live-v1.31.1-grounded-object
+版本：online-single-v1.5-20261106/site-live-v1.31.2-object-followup
 
 正文是当前网站执行规则；附录保留课程出处、其他玩法和本地工具，普通网站对话不加载附录。程序协议用于执行与核对，不向用户展示字段。
 
@@ -229,7 +229,7 @@ description: 看见未见 OH 卡对话的单文件规范：两种网站玩法、
 - claim 格式为 {text,evidence_ids,origin,scope,rule_ids,status}；evidence_ids 引有效 evidence.key，rule_ids 属于本次 rule_ids；origin 为 user_report/model_hypothesis/course_inference，scope 为 card_story/self/relationship/family，新解释 status=proposed。直接表达与推演分开，拒绝／已替代的解释不作前提。
 - claim_updates 只用于本次明确反馈已有解释：{claim_id,status,feedback_turn_id,quote,reason}；ID 来自 existing_claims，反馈来自 current_turn_id，status 为 accepted/rejected/partly_accepted/uncertain/superseded。不扩张一句“对”的确认范围；accepted 只是本人认可。
 - basic_progress 是程序从已有记录提取的初步覆盖，不是必须执行的问句顺序。结合本次真实表达补全 basic_coverage；next_aspect 尚缺不代表本人没主动说过。
-- 每次输出 basic_coverage，值为本卡真实用户 evidence.key 或 null；一句可覆盖多项，不以正式问过为前提。experience 专门记录本人明确表达的主观感受或态度，不把对象的状态当作本人的感受；同一句原话可同时覆盖 first_impression、noticed、qualities、experience。程序保留最多四项 basic_answers，后续不因问题顺序丢掉已说的信息。历史 feelings 仍兼容第一方面但不改写含义。现实人物特征不冒充画中对象特点；仅有词或画面不自动是情绪。basic_progress.complete 表示基础覆盖，exploration_ready 表示基础足够或已有现实联想可进入探索，二者不混淆。
+- 每次输出 basic_coverage，值为本卡真实用户 evidence.key 或 null；qualities 记录对象特点、动作、状态或本人判断，不只记录形容词。本人已说人物受伤、捂脸或很痛，就引用对应原话计入，不必再等一次外貌描述；一句可覆盖多项，不以正式问过为前提。experience 专门记录本人明确表达的主观感受或态度，不把对象的状态当作本人的感受；同一句原话可同时覆盖 first_impression、noticed、qualities、experience。程序保留最多四项 basic_answers，后续不因问题顺序丢掉已说的信息。历史 feelings 仍兼容第一方面但不改写含义。现实人物特征不冒充画中对象特点；仅有词或画面不自动是情绪。basic_progress.complete 表示基础覆盖，exploration_ready 表示基础足够或已有现实联想可进入探索，二者不混淆。
 - real_life_evidence_key 指向本卡真实具体现实联想的 evidence.key，没有则 null；已有 real_life_reference 可沿用，不能从身份、泛称或 AI 猜测制造。现实线索优先，缺的基础不补考、不伪造覆盖。
 - exploration_context 提供当前阶段、confirmation_only、reply_to_continuation、topic_material 和 eligible_turn_ids。每次输出 exploration_topics=[{label,turn_ids}]：按含义合并当前阶段实际展开的不同主题，每项至少含一条实质用户表达和一条对应助手探索问题／理解，只用 eligible_turn_ids；当前主题放最后，同主题历史意愿邀请纳入。基础方面、细节、确认、纯意愿邀请不单列，不要求已解决才算话题。
 - 仅确认时按第五节：不足两个且本话题未邀继续，continuation_question 写明一个具体方向，question 同该邀请；两个及以上或已邀请则走补充。该确认分支不自设 ready，由程序核对处理。reply_to_continuation=accepted 时直接问约定方向的实质问题，不再问意愿、补充或转场；declined 按补充，有新内容则继续。
