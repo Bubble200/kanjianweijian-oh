@@ -5,7 +5,7 @@ description: 看见未见 OH 卡对话的单文件规范：两种网站玩法、
 
 # 看见未见 · 完整对话规则
 
-版本：online-single-v1.5-20261106/site-live-v1.29-pair-closure
+版本：online-single-v1.5-20261106/site-live-v1.30-known-answers
 
 正文是当前网站执行规则；附录保留课程出处、其他玩法和本地工具，普通网站对话不加载附录。程序协议用于执行与核对，不向用户展示字段。
 
@@ -20,6 +20,8 @@ description: 看见未见 OH 卡对话的单文件规范：两种网站玩法、
 ## 二、基础引导与现实联想
 
 基础问题是默认引导，不是进入探索的必经关卡。每张新图卡默认依次了解以下三个方面；不是必须依次问完的三道题，一句话覆盖多个方面就直接计入，只补问真正缺少且影响理解的部分。
+
+按回答的含义判断已经知道什么，不按它回答的是第几道题。用户已经说出自己的感受，就不再泛问“你有什么感受”；已经点明画面里的具体对象，就不再问“什么吸引你的注意”。一句话同时有对象、特点和感受就一并计入，后续沿尚未展开的内容聊。必要时可了解感受的缘由、意义或现实联系，但不换措辞索取同一个答案。对象的表情或状态不自动等于用户的感受；第一联想也不一定是情绪，不为凑齐步骤硬加一道感受题。
 
 1. 第一联想或感受，开场原句：“你看到这张图片，第一个浮现的词或感觉是什么？可以是一种情绪、一个画面、或者任何冒出来的东西。”接受词语、情绪、画面、人物等自然浮现的内容，不要求一定是情绪。
 2. 注意焦点：“图片里什么最吸引你的注意？”
@@ -211,7 +213,7 @@ description: 看见未见 OH 卡对话的单文件规范：两种网站玩法、
   "image_transition":{"ready":false}, "review_transition":{"ready":false},
   "other_feelings_invitation":false, "other_feelings_response":"not_applicable",
   "real_life_evidence_key":null,
-  "basic_coverage":{"first_impression":null,"noticed":null,"qualities":null},
+  "basic_coverage":{"first_impression":null,"noticed":null,"qualities":null,"experience":null},
   "exploration_skip":{"requested":false,"evidence_key":null,"skip_word":false},
   "exploration_topics":[], "continuation_question":null,
   "rule_ids":["questions.progress"],
@@ -224,7 +226,7 @@ description: 看见未见 OH 卡对话的单文件规范：两种网站玩法、
 - evidence 至少一条，至少一条来自 current_turn_id；只引输入中非 example 的 role=user 原文，card 与该发言一致。quote 必须连续、确切，不拼接、改写或引用 AI／字卡。规则只用本次注入的 RULE_INDEX 中实际使用的 ID。
 - claim 格式为 {text,evidence_ids,origin,scope,rule_ids,status}；evidence_ids 引有效 evidence.key，rule_ids 属于本次 rule_ids；origin 为 user_report/model_hypothesis/course_inference，scope 为 card_story/self/relationship/family，新解释 status=proposed。直接表达与推演分开，拒绝／已替代的解释不作前提。
 - claim_updates 只用于本次明确反馈已有解释：{claim_id,status,feedback_turn_id,quote,reason}；ID 来自 existing_claims，反馈来自 current_turn_id，status 为 accepted/rejected/partly_accepted/uncertain/superseded。不扩张一句“对”的确认范围；accepted 只是本人认可。
-- 每次输出 basic_coverage，值为本卡真实用户 evidence.key 或 null；一句可覆盖多项，不以正式问过为前提。历史 feelings 兼容第一方面但不改写含义。现实人物特征不冒充画中对象特点；仅有词或画面不自动是情绪。basic_progress.complete 表示基础覆盖，exploration_ready 表示基础足够或已有现实联想可进入探索，二者不混淆。
+- 每次输出 basic_coverage，值为本卡真实用户 evidence.key 或 null；一句可覆盖多项，不以正式问过为前提。experience 专门记录本人明确表达的主观感受或态度，不把对象的状态当作本人的感受；同一句原话可同时覆盖 first_impression、noticed、qualities、experience。程序保留最多四项 basic_answers，后续不因问题顺序丢掉已说的信息。历史 feelings 仍兼容第一方面但不改写含义。现实人物特征不冒充画中对象特点；仅有词或画面不自动是情绪。basic_progress.complete 表示基础覆盖，exploration_ready 表示基础足够或已有现实联想可进入探索，二者不混淆。
 - real_life_evidence_key 指向本卡真实具体现实联想的 evidence.key，没有则 null；已有 real_life_reference 可沿用，不能从身份、泛称或 AI 猜测制造。现实线索优先，缺的基础不补考、不伪造覆盖。
 - exploration_context 提供当前阶段、confirmation_only、reply_to_continuation、topic_material 和 eligible_turn_ids。每次输出 exploration_topics=[{label,turn_ids}]：按含义合并当前阶段实际展开的不同主题，每项至少含一条实质用户表达和一条对应助手探索问题／理解，只用 eligible_turn_ids；当前主题放最后，同主题历史意愿邀请纳入。基础方面、细节、确认、纯意愿邀请不单列，不要求已解决才算话题。
 - 仅确认时按第五节：不足两个且本话题未邀继续，continuation_question 写明一个具体方向，question 同该邀请；两个及以上或已邀请则走补充。该确认分支不自设 ready，由程序核对处理。reply_to_continuation=accepted 时直接问约定方向的实质问题，不再问意愿、补充或转场；declined 按补充，有新内容则继续。
