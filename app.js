@@ -96,7 +96,7 @@ function restoreArchivedRound(record,owner,checkpoint=null){
  if(!record||record.status!=='active'||!Array.isArray(record.cards)||!record.cards.length||record.cards.length>3||new Set(record.cards).size!==record.cards.length||record.cards.some(n=>!Number.isInteger(n)||n<1||n>88)||!Array.isArray(record.turns)||!record.turns.every(t=>['user','assistant'].includes(t.role)&&record.cards.includes(t.card)&&typeof t.id==='string'&&typeof t.text==='string'))return false;
  if(owner!==(libraryAccount?.id??null)||libraryLoading||libraryError)return false;
  if(state?.id===record.id){$('#memory-dialog').close();$('#info-dialog').close();showView('session');renderSession();return true;}
- if(state?.cards.length&&(state.turns.some(t=>t.role==='user'&&!t.example)||Object.values(state.drafts||{}).some(Boolean)||$('#message-input').value.trim())){toast('当前还有一轮在进行，请先结束或回顾，再继续存档。');return false;}
+ if(state?.cards.length&&(state.turns.some(t=>t.role==='user'&&!t.example)||Object.values(state.drafts||{}).some(Boolean)||$('#message-input').value.trim())){toast('当前还有一轮在进行，请先收好这一轮，再继续存档。');return false;}
  const mode=playMode(record),cards=[...record.cards],pairings=structuredClone(record.pairings||{}),words=WORD_DECK.cards.map(w=>w.id);
  for(const card of cards){const pair=pairings[card]||{status:'image_only'};if(!['image_only','ready','pending','paired','skipped','removed'].includes(pair.status)||pair.word_id&&!words.includes(pair.word_id))return false;pairings[card]=pair;}
  const picks=structuredClone(record.picks||cards.map((card,position)=>({card,position}))),wordPicks=structuredClone(record.wordPicks||[]);
@@ -306,6 +306,13 @@ function canDrawNext(card, latest = state?.turns.findLast(t => t.card === card))
     (imageOnlyMode(state) || ['paired','skipped','removed'].includes(state.pairings[card]?.status)) &&
     !state.replyRequests[card] && latest?.role === 'assistant' && latest.image_transition?.ready === true;
 }
+function roundReviewReady(round = state) {
+  if (round?.cards.length !== 3) return false;
+  const card = round.cards.at(-1);
+  const latest = round.turns.findLast(t => t.card === card);
+  return !round.replyRequests[card] && latest?.role === 'assistant' && latest.review_transition?.ready === true &&
+    (imageOnlyMode(round) || ['paired','skipped','removed'].includes(round.pairings[card]?.status));
+}
 function renderSession() {
   const n = state.activeCard, position = state.cards.indexOf(n) + 1;
   const pairing=state.pairings[n];
@@ -330,7 +337,7 @@ function renderSession() {
   const cardTurns=state.turns.filter(t => t.card === n);
   const latest=cardTurns.at(-1);
   const nextImage=canDrawNext(n,latest) ? `<div class="next-image-step"><button class="primary" data-action="draw">抽第 ${state.cards.length+1} 张图卡 ${icon('arrow')}</button></div>` : '';
-  const reviewStep=state.status==='active' && state.cards.at(-1)===n && !state.replyRequests[n] && latest?.review_transition?.ready===true ? '<div class="next-image-step"><button class="primary" data-action="review">回顾这一轮 ↗</button></div>' : '';
+  const reviewStep=state.status==='active' && state.cards.at(-1)===n && roundReviewReady() ? '<div class="next-image-step"><button class="primary" data-action="review">回顾这一轮 ↗</button></div>' : '';
   $('#messages').innerHTML = renderConversation(cardTurns) + nextImage + reviewStep +
     (state.replyRequests[n] ? '<p class="reply-wait" role="status">正在回应…</p>' : '') +
     (state.replyErrors[n] ? `<div class="reply-error" role="status"><p>${escapeHTML(state.replyErrors[n])}</p><button class="plain-link" data-action="retry-ai">重试回应 ↗</button></div>` : '');
@@ -546,14 +553,14 @@ $('#active-card-image').addEventListener('error', () => {
 function openInfo(html) { delete $('#info-content').dataset.libraryOwner; $('#info-content').innerHTML = html; if (!$('#info-dialog').open) $('#info-dialog').showModal(); }
 function askToRestart(example = false) {
   if (state?.status === 'active' && (state.turns.some(t => t.role === 'user') || Object.values(state.drafts).some(v=>v.trim()))) {
-    openInfo(`<p class="eyebrow">开始新的一轮</p><h2>先收好这一轮？</h2><p>本轮已发送的对话会自动留档；输入框未发送的草稿会被清空。你可以继续编辑，或先回顾再重新开始。</p><div class="review-actions"><button class="primary" data-action="review-before-new">先回顾</button><button class="secondary" data-action="confirm-new" data-example="${example}">结束本轮，开始新一轮</button></div>`);
+    openInfo(`<p class="eyebrow">开始新的一轮</p><h2>先收好这一轮？</h2><p>本轮已发送的对话会自动留档；输入框未发送的草稿会被清空。</p><div class="review-actions">${roundReviewReady() ? '<button class="primary" data-action="review-before-new">先回顾</button>' : ''}<button class="secondary" data-action="confirm-new" data-example="${example}">结束本轮，开始新一轮</button></div>`);
   } else newRound(example);
 }
 function openReview() {
-  if (!state || !state.cards.length) { toast('先选一张卡，再回顾这一轮。'); return; }
+  if (!roundReviewReady()) { toast('完成三张图卡后，就可以回顾这一轮。'); return; }
   if (state.status === 'active') {
     const hasDraft = Object.values(state.drafts).some(v=>v.trim());
-    openInfo(`<p class="eyebrow">随时可以停</p><h2>先聊到这里？</h2><p>回顾只整理已经说过的话，不要求抽满三张。确认后结束本轮，你仍可回看卡片与对话。${hasDraft ? '输入框还有未发送的草稿，它们不会进入回顾；要保留的话，请先选择继续聊并发送。' : ''}</p><div class="review-actions"><button class="primary" data-action="confirm-end">结束并回顾</button><button class="secondary" data-action="close-dialog">继续聊</button></div>`);
+    openInfo(`<p class="eyebrow">三张图卡已完成</p><h2>回顾这一轮？</h2><p>确认后结束本轮，你仍可回看卡片与对话。${hasDraft ? '输入框还有未发送的草稿，它们不会进入回顾；要保留的话，请先选择继续聊并发送。' : ''}</p><div class="review-actions"><button class="primary" data-action="confirm-end">结束并回顾</button><button class="secondary" data-action="close-dialog">继续聊</button></div>`);
   } else renderReview();
 }
 function turnWordLabel(turn) {
@@ -612,7 +619,7 @@ function exportReview() {
 let reportData = null;
 let reportGeneration = 0;
 async function startReport() {
-  if (!state) return;
+  if (!roundReviewReady()) return;
   const round = state, owner = libraryAccount?.id || null;
   const generation = ++reportGeneration, requestId = uid();
   const data = buildReport(round), payload = buildReportPayload(round, requestId);
@@ -748,7 +755,9 @@ document.addEventListener('click', event => {
   else if (action === 'memory-tab') { memoryTab=target.dataset.tab; renderMemory(); }
   else if (action === 'review') openReview();
   else if (action === 'confirm-end') {
-    closeDialog(target); state.status='ended'; state.pending=false;
+    closeDialog(target);
+    if (!roundReviewReady()) return;
+    state.status='ended'; state.pending=false;
     for (const pending of Object.values(state.replyRequests)) pending.controller.abort();
     rememberHomeCards();
     preparedDeck=shuffledCards(); // Prepare the next round now; keep the ended round's positions intact for its history.
@@ -763,7 +772,7 @@ document.addEventListener('click', event => {
   else if (action === 'resume-review') resumeSavedRound(target.dataset.id);
   else if (action === 'export-review') exportReview();
   else if (action === 'make-report') startReport();
-  else if (action === 'back-review') { showView('review'); renderReview(); }
+  else if (action === 'back-review') openReview();
   else if (action === 'export-report') exportReport();
   else if (action === 'print-report') window.print();
   else if (action === 'edit-memory') editMemory(target.dataset.id);
@@ -791,7 +800,7 @@ document.addEventListener('click', event => {
     openInfo(savedReviewHTML(r));
     if(libraryAccount) $('#info-content').dataset.libraryOwner=libraryAccount.id;
   }
-  else if (action === 'how') openInfo(`<p class="eyebrow">没有标准答案</p><h2>给一张图，留一点想象。</h2><ol><li>88 张牌背叠放在一起，每张露出一部分；悬停抬起后自己点选。</li><li>图卡不搭配字卡。图字探索先围绕图卡聊出感受、评价或故事，按自然探索及补充进度再进入字卡抽选，不按固定轮数。也可以点“只看图卡”跳过，或在对话里说明不想搭配字卡。用自己的话说联想与感受，不必强行把词用上。</li><li>两种玩法都从第一联想或感受和注意焦点开始。若说的是整个场景或多个焦点，不逐个追问对象特点。“不知道”或“想不出来”也算对当前问题的回答。当前话题聊不下去时，会回看你前面提过的线索；收尾时可以再补充一次。补充结束后，纯图卡显示抽下一张的入口，图字探索尚未配字时直接展示字卡牌堆，可以自己抽一张，也可以跳过。两种模式均最多三张图，选过的位置不能再选。</li><li>本轮牌位不变，整轮结束后重新洗牌。想停时随时回顾、保存。</li></ol><p>图像没有固定牌意，不做人格计分。你可以直接在对话里纠正 AI，不需要给回答打分。</p><p><a href="skill/#L27" target="_blank" rel="noopener">查看当前引导规则 ↗</a></p>`);
+  else if (action === 'how') openInfo(`<p class="eyebrow">没有标准答案</p><h2>给一张图，留一点想象。</h2><ol><li>88 张牌背叠放在一起，每张露出一部分；悬停抬起后自己点选。</li><li>图卡不搭配字卡。图字探索先围绕图卡聊出感受、评价或故事，按自然探索及补充进度再进入字卡抽选，不按固定轮数。也可以点“只看图卡”跳过，或在对话里说明不想搭配字卡。用自己的话说联想与感受，不必强行把词用上。</li><li>两种玩法都从第一联想或感受和注意焦点开始。若说的是整个场景或多个焦点，不逐个追问对象特点。“不知道”或“想不出来”也算对当前问题的回答。当前话题聊不下去时，会回看你前面提过的线索；收尾时可以再补充一次。补充结束后，纯图卡显示抽下一张的入口，图字探索尚未配字时直接展示字卡牌堆，可以自己抽一张，也可以跳过。两种模式均最多三张图，选过的位置不能再选。</li><li>本轮牌位不变，整轮结束后重新洗牌。想停时可以先返回，已发送的对话会自动保存；完成第三张图卡后才能回顾本轮。</li></ol><p>图像没有固定牌意，不做人格计分。你可以直接在对话里纠正 AI，不需要给回答打分。</p><p><a href="skill/#L27" target="_blank" rel="noopener">查看当前引导规则 ↗</a></p>`);
   else if (action === 'about') openInfo(`<p class="eyebrow">OH 卡交互展示版</p><h2>先体验它如何展开。</h2><p>本站提供“图字探索”和“图卡”两种玩法；图卡不搭配字卡。图字探索使用 88 张图卡及 88 张中文字卡清晰重排版。图卡与字卡分别独立洗牌，每张图先聊，形成线索并由你补充或修正后，再进入一张字卡的抽选；一轮最多三组，同类牌轮内不重复，可跳过或停用字卡。</p><p>发送后由 DeepSeek 根据实际图卡、当前对话和引导规则实时回应。</p><p>新一轮的卡牌与已发送对话自动保存：未登录时留在当前浏览器，登录后开始的轮次同步到私人账号，可跨设备查看。未发送草稿不会上传。旧的本机记录不会自动上传，可在账号里选择复制。AI 对话会把本轮已揭示图卡、字卡及其使用状态、对话及本人选择留作参考的非示例记忆交给 DeepSeek 处理。邮箱账号与账号内的记录由 Supabase 托管；各账号只能访问自己的记录。清除浏览器数据只移除本机记录，不会删除账号里的存档。</p><p>界面为原创展示设计；只借鉴参考站的轻量、逐步体验，不复制它的品牌和角色。图卡由站点所有者提供并确认具有对外展示授权。中文字卡沿用此前整理的四边字清晰重排版，不是原扫描图或经认证的官方版；<a href="words/source.json" target="_blank" rel="noopener">查看词表与素材来源</a>。</p>`);
 });
 function renderHomeEntry() {
