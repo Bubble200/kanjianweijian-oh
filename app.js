@@ -1,12 +1,17 @@
 import { roundArchive, createRoundAutosaver } from './round-autosave.mjs?v=20261105-autosave';
 import { PLAY_MODES, DEFAULT_PLAY_MODE, playMode, imageOnlyMode } from './play-modes.mjs';
 import { WORD_DECK } from './word-deck.mjs';
-import { EXPLORATION_NOTICE, FIRST_IMPRESSION_QUESTION } from './dialogue-copy.mjs?v=20261105-first-impression';
+import { EXPLORATION_NOTICE, firstImpressionQuestion } from './dialogue-copy.mjs?v=20261112-numbered-opening';
+import { buildReport, renderReport, buildReportPayload, applyReportResult } from './report.mjs';
 'use strict';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const icon = name => `<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
+const uid = (() => {
+  const native = globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function' ? globalThis.crypto.randomUUID.bind(globalThis.crypto) : null;
+  return native || (() => 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10));
+})();
 const cardID = n => `OH-${String(n).padStart(3,'0')}`;
 const cardURL = n => `cards/oh-${String(n).padStart(3,'0')}.jpg`;
 const memoryKey = 'liubai.oh.preview.memories.v1';
@@ -153,7 +158,7 @@ function newRound(example = false, mode = selectedPlayMode, revisitCard = null) 
 }
 function showView(name) {
   currentView = name;
-  for (const view of ['home','session','review']) $(`#${view}-view`).hidden = name !== view;
+  for (const view of ['home','session','review','report']) $(`#${view}-view`).hidden = name !== view;
   if (name === 'home') { renderHomeEntry(); renderHomeCards(); }
   window.scrollTo({top:0, behavior:'instant'});
 }
@@ -226,7 +231,7 @@ function revealPosition(position) {
   $('#card-zoom').classList.remove('card-reveal');
   requestAnimationFrame(() => $('#card-zoom').classList.add('card-reveal'));
   const roundId = state.id;
-  setTimeout(() => { if (state?.id === roundId) { state.pending = false; updateDrawButton(); } }, 500);
+  setTimeout(() => { if (state?.id === roundId) { state.pending = false; } }, 500);
 }
 
 function wordContext(card) {
@@ -244,7 +249,7 @@ function pairLabel(card, pairs = state?.pairings, mode = state?.play_mode) {
 function addOpening(card) {
   if (state.turns.some(t=>t.card===card)) return;
   const paired=state.pairings[card]?.status==='paired';
-  const question=paired ? '把这张图和这个词放在一起，你会想到什么？' : FIRST_IMPRESSION_QUESTION;
+  const question=paired ? '把这张图和这个词放在一起，你会想到什么？' : firstImpressionQuestion(state.cards.indexOf(card) + 1);
   addTurn('assistant',question,{card,question,basis:paired ? '先听你怎样理解图与字的组合；字卡本身不代表你的感受或特质。' : '先听这张图带给你的第一联想或感受，不预设答案，也不要求一定说出情绪。',ruleLine:paired ? 55 : 29,ruleName:paired ? '个人赋义优先' : '基础提问：先听第一联想或感受',origin:'引导问句'});
 }
 function openWordDeck() {
@@ -263,7 +268,7 @@ function openWordDeck() {
 }
 function revealWord(position) {
   if(imageOnlyMode(state))return;
-  if (!state || state.status!=='active' || state.pairings[state.activeCard]?.status!=='ready' || !Number.isInteger(position) || position<0 || position>=state.wordDeck.length || state.wordPicks.some(p=>p.position===position)) return;
+  if (!state || state.status!=='active' || state.pairings[state.activeCard]?.status!=='ready' || state.replyRequests[state.activeCard] || !Number.isInteger(position) || position<0 || position>=state.wordDeck.length || state.wordPicks.some(p=>p.position===position)) return;
   const word=WORD_DECK.cards.find(w=>w.id===state.wordDeck[position]);
   state.wordPicks.push({card:state.activeCard,word_id:word.id,position,at:new Date().toISOString()});
   state.pairings[state.activeCard]={...state.pairings[state.activeCard],status:'paired',word_id:word.id};
@@ -291,16 +296,10 @@ function removeWord() {
   renderSession();
 }
 
-function updateDrawButton() {
-  const full = state.cards.length >= 3;
-  const ended = state.status !== 'active';
-  $('.draw-rail').hidden = !imageOnlyMode(state);
-  $('.session-layout').dataset.playMode = playMode(state);
-  $('.session-kicker').textContent = PLAY_MODES[playMode(state)].name;
-  $('#draw-next').disabled = full || ended || state.pending;
-  $('#draw-next strong').textContent = ended ? '本轮已结束' : full ? '已抽满三张' : `抽第 ${state.cards.length+1} 张图卡`;
-  $('#draw-target').textContent = full || ended ? `${state.cards.length} / 3 张` : `第 ${state.cards.length + 1} / 3 张`;
-  $('#draw-note').innerHTML = full ? '不用急着结束，<br>还可以接着聊。' : '不用等聊完，<br>想抽就可以抽。';
+function canDrawNext(card, latest = state?.turns.findLast(t => t.card === card)) {
+  return state?.status === 'active' && state.cards.length < 3 && state.cards.at(-1) === card &&
+    (imageOnlyMode(state) || ['paired','skipped','removed'].includes(state.pairings[card]?.status)) &&
+    !state.replyRequests[card] && latest?.role === 'assistant' && latest.image_transition?.ready === true;
 }
 function renderSession() {
   const n = state.activeCard, position = state.cards.indexOf(n) + 1;
@@ -310,7 +309,7 @@ function renderSession() {
   $('#word-frame').removeAttribute('src');
   $('#word-status').hidden=true;
   $('#word-status').innerHTML='';
-  $('#word-step').hidden=imageOnlyMode(state)||pairing?.status!=='ready'||state.status!=='active';
+  $('#word-step').hidden=imageOnlyMode(state)||pairing?.status!=='ready'||state.status!=='active'||Boolean(state.replyRequests[n]);
   if(!$('#word-step').hidden)openWordDeck();
   $('#card-zoom').setAttribute('aria-label','放大当前图卡');
   $('#card-position').textContent = `第 ${position} 张图卡`;
@@ -325,15 +324,15 @@ function renderSession() {
   $('#card-strip').innerHTML = state.cards.map((c, i) => `<button class="card-thumb ${c === n ? 'active' : ''}" data-action="select-card" data-card="${c}" aria-pressed="${c === n}"><img src="${cardURL(c)}" alt=""><span>第 ${i+1} 张</span>${state.pairings[c]?.status==='paired'?`<span class="thumb-word"> · ${escapeHTML(wordFor(c).text)}</span>`:''}</button>`).join('');
   const cardTurns=state.turns.filter(t => t.card === n);
   const latest=cardTurns.at(-1);
-  const nextImage=state.status==='active' && state.cards.length<3 && state.cards.at(-1)===n && (imageOnlyMode(state)||['paired','skipped','removed'].includes(pairing?.status)) && !state.replyRequests[n] && latest?.image_transition?.ready===true ? `<div class="next-image-step"><button class="primary" data-action="draw">抽第 ${state.cards.length+1} 张图卡 ${icon('arrow')}</button></div>` : '';
-  const reviewStep=state.status==='active' && (state.cards.length===3||imageOnlyMode(state)) && state.cards.at(-1)===n && !state.replyRequests[n] && latest?.review_transition?.ready===true ? '<div class="next-image-step"><button class="primary" data-action="review">回顾这一轮 ↗</button></div>' : '';
+  const nextImage=canDrawNext(n,latest) ? `<div class="next-image-step"><button class="primary" data-action="draw">抽第 ${state.cards.length+1} 张图卡 ${icon('arrow')}</button></div>` : '';
+  const reviewStep=state.status==='active' && state.cards.at(-1)===n && !state.replyRequests[n] && latest?.review_transition?.ready===true ? '<div class="next-image-step"><button class="primary" data-action="review">回顾这一轮 ↗</button></div>' : '';
   $('#messages').innerHTML = renderConversation(cardTurns) + nextImage + reviewStep +
     (state.replyRequests[n] ? '<p class="reply-wait" role="status">正在回应…</p>' : '') +
     (state.replyErrors[n] ? `<div class="reply-error" role="status"><p>${escapeHTML(state.replyErrors[n])}</p><button class="plain-link" data-action="retry-ai">重试回应 ↗</button></div>` : '');
   $('#example-controls').hidden = !state.example || state.status !== 'active' || state.exampleStep >= exampleTurns.length;
   $('#message-input').disabled = state.status !== 'active';
   $('#message-form button[type=submit]').disabled = state.status !== 'active' || Boolean(state.replyRequests[n]);
-  updateDrawButton();
+  $('.session-kicker').textContent = PLAY_MODES[playMode(state)].name;
   const messages = $('#messages'); messages.scrollTop = messages.scrollHeight;
   autosaveRound();renderArchiveStatus();
 }
@@ -485,8 +484,7 @@ function submitInput() {
   if (!state || state.status !== 'active' || state.replyRequests[state.activeCard] || state.pairings[state.activeCard]?.status==='pending') return;
   const input = $('#message-input'), text = input.value.trim();
   if (!text) { input.focus(); return; }
-  // A new expression can correct the theme. Reassess before offering the word deck again.
-  if(state.pairings[state.activeCard]?.status==='ready'){state.pairings[state.activeCard]={status:'image_only'};}
+  // Preserve the actual deck state. The model decides what the new expression means.
   state.example = false; addTurn('user', text); input.value = ''; state.drafts[state.activeCard]='';
   state.revisions[state.activeCard]=(state.revisions[state.activeCard]||0)+1;
   if (liveAI) startLiveReply(state.activeCard);
@@ -506,7 +504,7 @@ async function startLiveReply(card) {
   round.replyRequests[card]={id:requestId,controller};delete round.replyErrors[card];renderSession();
   const payload={play_mode:playMode(round),session_id:round.id,request_id:requestId,input_revision:revision,active_card:card,current_turn_id:lastUser.id,cards:[...round.cards],
     word_pairs:round.cards.map(n=>({card:n,...wordContext(n)})),
-    turns:round.turns.map(t=>({id:t.id,role:t.role,card:t.card,text:t.text,example:Boolean(t.example),...(t.reply_to?{reply_to:t.reply_to,reply_action:t.reply_action}:{}),...(t.basic_answers?{basic_answers:t.basic_answers}:{}),...(t.real_life_reference?{real_life_reference:t.real_life_reference}:{}),...(t.other_feelings_invitation!==undefined?{other_feelings_invitation:t.other_feelings_invitation}:{}),...(t.word_context?{word_context:t.word_context}:{})})),
+    turns:round.turns.map(t=>({id:t.id,role:t.role,card:t.card,text:t.text,example:Boolean(t.example),...(t.reply_to?{reply_to:t.reply_to,reply_action:t.reply_action}:{}),...(t.basic_answers?{basic_answers:t.basic_answers}:{}),...(t.real_life_reference?{real_life_reference:t.real_life_reference}:{}),...(t.other_feelings_invitation!==undefined?{other_feelings_invitation:t.other_feelings_invitation}:{}),...(t.question_kind?{question_kind:t.question_kind}:{}),...(t.word_context?{word_context:t.word_context}:{})})),
     memories:memories.filter(m=>!m.example).map(m=>({id:m.id,text:m.text})),
     existing_claims:round.turns.filter(t=>t.claimId&&t.hypothesis).map(t=>({id:t.claimId,card:t.card,text:t.hypothesis,status:t.claimState||'proposed'}))};
   try {
@@ -517,11 +515,13 @@ async function startLiveReply(card) {
     if(controller.signal.aborted||(libraryAccount?.id || null)!==accountOwner||state!==round||round.status!=='active'||round.revisions[card]!==revision||data.session_id!==round.id||data.input_revision!==revision||data.request_id!==requestId)return;
     const answer=formatAssistantReply(data.message,data.question);
     const rule=data.rules?.[0],claim=data.claims?.[0];
-    round.turns.push({id:crypto.randomUUID(),role:'assistant',text:answer,card,reply_to:lastUser.id,reply_action:data.next_action,word_transition:data.word_transition,image_transition:data.image_transition,review_transition:data.review_transition,other_feelings_invitation:data.other_feelings_invitation,basic_answers:data.basic_answers,real_life_reference:data.real_life_reference,word_context:wordContext(card),at:new Date().toISOString(),origin:data.trace?.provider==='program'?'玩法转场':'DeepSeek 实时回应',question:data.question,
+    round.turns.push({id:crypto.randomUUID(),role:'assistant',text:answer,card,reply_to:lastUser.id,reply_action:data.next_action,word_transition:data.word_transition,image_transition:data.image_transition,review_transition:data.review_transition,other_feelings_invitation:data.other_feelings_invitation,question_kind:data.question_kind,basic_answers:data.basic_answers,real_life_reference:data.real_life_reference,word_context:wordContext(card),at:new Date().toISOString(),origin:data.trace?.provider==='program'?'玩法转场':'DeepSeek 实时回应',question:data.question,
       quotes:data.evidence.map(e=>e.quote),basis:data.basis,ruleLine:rule?.line||53,ruleName:rule?.name||'围绕原话回应',
       usedRules:data.rules,claimId:claim?.id,hypothesis:claim?.text,claimState:claim?'proposed':undefined,claimOrigin:claim?.origin,claimScope:claim?.scope,audit:data.trace});
-    if(!imageOnlyMode(round) && round.pairings[card]?.status==='image_only' && data.word_transition?.ready===true && !['pause','end'].includes(data.next_action)) round.pairings[card]={status:'ready',transition:data.word_transition};
+    if(!imageOnlyMode(round) && ['image_only','ready'].includes(round.pairings[card]?.status) && data.word_transition?.ready===true && !['pause','end'].includes(data.next_action)) round.pairings[card]={status:'ready',transition:data.word_transition};
+    if(!imageOnlyMode(round)&&round.pairings[card]?.status==='ready'&&!data.word_transition?.ready&&!data.word_transition?.skipped){round.pairings[card]={status:'image_only'};}
     if(!imageOnlyMode(round) && data.word_transition?.skipped===true&&!['pause','end'].includes(data.next_action))round.pairings[card]={...round.pairings[card],status:round.pairings[card]?.word_id?'removed':'skipped'};
+    if(data.next_action==='end'){round.status='ended';rememberHomeCards();}
     for(const update of data.claim_updates||[]){const t=round.turns.find(t=>t.claimId===update.claim_id);if(t){t.claimState=update.status;t.feedbackQuote=update.quote;t.feedbackReason=update.reason;}}
   } catch(error) {
     if(error.name!=='AbortError'&&state===round&&round.status==='active'&&round.revisions[card]===revision&&round.replyRequests[card]?.id===requestId)round.replyErrors[card]=error.message||'AI 暂时没有回应，你的文字还在，可以重试。';
@@ -571,7 +571,7 @@ function renderReview() {
     ${accepted.length ? `<section class="review-section"><h2>你明确回应过的理解</h2>${accepted.map(t=>`<div class="quote-record"><p>${escapeHTML(t.hypothesis)}</p><small>本人后续回应：“${escapeHTML(t.feedbackQuote)}”</small></div>`).join('')}<p>只表示本人认可这一项，不自动确认其他推论。</p></section>` : ''}
     ${assistants.length ? `<section class="review-section"><h2>仍需核对的理解</h2>${assistants.map(t => `<div class="quote-record"><small>${t.example ? 'AI 示例推测' : 'AI 的可能理解'} · 尚未由本人逐项确认</small><p>${escapeHTML(t.hypothesis)}</p></div>`).join('')}<p>这些推测不作为用户事实写入长期记忆。</p></section>` : ''}
     <section class="review-section"><h2>有什么想留给下次？</h2><p>勾选后保存为“下次可参考”的内容。${state.example ? '这轮是示例，记忆也会标明“演示记录”，不当作新用户的真实经历。' : '这里只保存你的原话；它们是否也适用于以后，可以随时修改。'}</p>${candidates || '<p class="empty-state">没有可保存的个人表达。</p>'}${userTurns.length ? `<button class="secondary" data-action="save-memory">${remembered ? '继续选择要保留的内容' : '保存勾选内容到记忆'}</button>` : ''}</section>
-    <div class="review-actions"><button id="review-retry-autosave" class="secondary" data-action="retry-save" ${archiveStatus?.state==='error'?'':'hidden'}>重试保存 ${icon('memory')}</button><button class="secondary" data-action="export-review">导出文字</button><button class="secondary" data-action="view-ended">回看对话</button></div><p class="small-caption"><span id="review-autosave-status">${escapeHTML(archiveText())}</span></p><button class="plain-link" data-action="start">再开始一轮 ↗</button>`;
+    <div class="review-actions"><button id="review-retry-autosave" class="secondary" data-action="retry-save" ${archiveStatus?.state==='error'?'':'hidden'}>重试保存 ${icon('memory')}</button><button class="primary" data-action="make-report">生成这份报告</button><button class="secondary" data-action="export-review">导出文字</button><button class="secondary" data-action="view-ended">回看对话</button></div><p class="small-caption"><span id="review-autosave-status">${escapeHTML(archiveText())}</span></p><button class="plain-link" data-action="start">再开始一轮 ↗</button>`;
   showView('review');renderArchiveStatus();
 }
 function saveSelectedMemories() {
@@ -602,6 +602,57 @@ function exportReview() {
   const blob = new Blob([lines.join('\n')], {type:'text/plain;charset=utf-8'}), url = URL.createObjectURL(blob);
   const anchor = document.createElement('a'); anchor.href=url; anchor.download=`看见未见-OH卡-${state.id.slice(0,8)}.txt`; anchor.click();
   setTimeout(() => URL.revokeObjectURL(url),1000);
+}
+
+let reportData = null;
+let reportGeneration = 0;
+async function startReport() {
+  if (!state) return;
+  const round = state, owner = libraryAccount?.id || null;
+  const generation = ++reportGeneration, requestId = uid();
+  const data = buildReport(round), payload = buildReportPayload(round, requestId);
+  const stillCurrent = () => generation === reportGeneration && state === round && (libraryAccount?.id || null) === owner;
+  reportData = data;
+  $('#report-view').innerHTML = '<p class="r-loading" role="status">正在结合这一轮的图卡、原话与核对记录整理回顾…</p>';
+  showView('report');
+  const imgs = {};
+  await Promise.all(data.overview.cards.map(async n => {
+    try {
+      const response = await fetch(cardURL(n));
+      if (!response.ok) return;
+      const blob = await response.blob();
+      imgs[n] = await new Promise(resolve => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = () => resolve(null); reader.readAsDataURL(blob); });
+    } catch { /* Keep the original URL if embedding fails. */ }
+  }));
+  if (!stillCurrent()) return;
+  data.cardImages = imgs; data.overview.images = imgs;
+  try {
+    if (payload.turns.some(t=>t.role === 'user')) {
+      await connectVisitor();
+      const response = await fetch(window.OH_RUNTIME.apiBase+'/report', {method:'POST',credentials:'omit',headers:{'content-type':'application/json','x-oh-request':'1'},body:JSON.stringify(payload)});
+      let result; try { result = await response.json(); } catch { throw new Error('回顾没有生成成功，可以重试。'); }
+      if (!response.ok) { if (response.status === 401) visitorSessionPromise = null; throw new Error(result.error?.message || '回顾没有生成成功，可以重试。'); }
+      if (!stillCurrent() || result.request_id !== requestId || result.session_id !== round.id) return;
+      applyReportResult(data,result);
+    }
+  } catch (error) {
+    if (!stillCurrent()) return;
+    data.exploreError = error.message || '这次报告没有生成成功，可以重试。';
+  }
+  if (stillCurrent() && currentView === 'report') renderReportView();
+}
+function renderReportView() {
+  $('#report-view').innerHTML = renderReport(reportData) +
+    `<div class="r-actions">${reportData.exploreError ? '<button class="primary" data-action="make-report">重试生成</button>' : ''}<button class="secondary" data-action="back-review">返回回顾</button><button class="secondary" data-action="export-report">导出 HTML</button><button class="secondary" data-action="print-report">打印 / 存为 PDF</button></div>`;
+}
+async function exportReport() {
+  if (!reportData) return;
+  let css = '';
+  try { css = await (await fetch('report.css')).text(); } catch {}
+  const html = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>探索回顾 · 看见未见</title><style>${css}</style><style>body{margin:0;background:#faf8f4}</style></head><body><main id="report-view">${renderReport(reportData)}</main></body></html>`;
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' }), url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a'); anchor.href = url; anchor.download = '看见未见-探索回顾.html'; anchor.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 function updateMemoryCount() { $('.memory-button').hidden=!libraryAccount?.id; $('#memory-count').textContent=memories.length; $('#memory-count').hidden=!memories.length; }
 function openMemory() { renderMemory(); $('#memory-dialog').showModal(); }
@@ -647,11 +698,16 @@ document.addEventListener('click', event => {
     if (state?.status === 'active') { showView('home'); toast('本轮仍保留在页面中，可以继续。'); renderHomeEntry(); }
     else showView('home');
   }
-  else if (action === 'revisit-card') { closeDialog(target); newRound(false,selectedPlayMode,Number(target.dataset.card)); }
+  else if (action === 'revisit-card') {
+    if (!Object.hasOwn(PLAY_MODES,target.dataset.mode)) return;
+    closeDialog(target);
+    selectedPlayMode=target.dataset.mode;
+    newRound(false,selectedPlayMode,Number(target.dataset.card));
+  }
   else if (action === 'start') askToRestart(false);
   else if (action === 'resume') { if(!state.cards.length) openDeck(); else { showView('session'); renderSession(); } }
   else if (action === 'example') askToRestart(true);
-  else if (action === 'draw') openDeck();
+  else if (action === 'draw') { if (canDrawNext(state?.activeCard)) openDeck(); }
   else if (action === 'skip-word') skipWord();
   else if (action === 'remove-word') removeWord();
   else if (action === 'pick-word') {
@@ -701,6 +757,10 @@ document.addEventListener('click', event => {
   else if (action === 'retry-save') { autosaveRound();retryArchives(); }
   else if (action === 'resume-review') resumeSavedRound(target.dataset.id);
   else if (action === 'export-review') exportReview();
+  else if (action === 'make-report') startReport();
+  else if (action === 'back-review') { showView('review'); renderReview(); }
+  else if (action === 'export-report') exportReport();
+  else if (action === 'print-report') window.print();
   else if (action === 'edit-memory') editMemory(target.dataset.id);
   else if (action === 'cancel-memory-edit') renderMemory();
   else if (action === 'save-memory-edit') {
@@ -726,8 +786,8 @@ document.addEventListener('click', event => {
     openInfo(savedReviewHTML(r));
     if(libraryAccount) $('#info-content').dataset.libraryOwner=libraryAccount.id;
   }
-  else if (action === 'how') openInfo(`<p class="eyebrow">没有标准答案</p><h2>给一张图，留一点想象。</h2><ol><li>88 张牌背叠放在一起，每张露出一部分；悬停抬起后自己点选。</li><li>图卡不搭配字卡。图字探索先围绕图卡聊出感受、评价或故事，按自然探索及补充进度再进入字卡抽选，不按固定轮数。也可以点“只看图卡”跳过，或在对话里说明不想搭配字卡。用自己的话说联想与感受，不必强行把词用上。</li><li>图字探索按“图→字→组合探索→下一张图”推进，不提供随时换图按钮；图卡沿同样的基础了解、探索与补充节奏，去掉字卡环节，右侧（手机底部）可随时抽下一张。两种模式均最多三张图，选过的位置不能再选。</li><li>本轮牌位不变，整轮结束后重新洗牌。想停时随时回顾、保存。</li></ol><p>图像没有固定牌意，不做人格计分。你可以直接在对话里纠正 AI，不需要给回答打分。</p><p><a href="skill/#L27" target="_blank" rel="noopener">查看当前引导规则 ↗</a></p>`);
-  else if (action === 'about') openInfo(`<p class="eyebrow">OH 卡交互展示版</p><h2>先体验它如何展开。</h2><p>本站提供“图字探索”和“图卡”两种玩法；图卡不搭配字卡。图字探索使用 88 张图卡及 88 张中文字卡清晰重排版。图卡与字卡分别独立洗牌，每张图先聊，形成线索并由你补充或修正后，再进入一张字卡的抽选；一轮最多三组，同类牌轮内不重复，可跳过或停用字卡。</p><p>发送后由 DeepSeek 根据实际图卡、当前对话和引导规则实时回应。</p><p>新一轮的卡牌与已发送对话自动保存：未登录时留在当前浏览器，登录后开始的轮次同步到私人账号，可跨设备查看。未发送草稿不会上传。旧的本机记录不会自动上传，可在账号里选择复制。AI 对话会把本轮已揭示图卡、字卡及其使用状态、对话及本人选择留作参考的非示例记忆经 Supabase 转发至现有 AI 服务并交给 DeepSeek 处理。两个入口共用每天200次额度。邮箱账号与账号内的记录由 Supabase 托管；各账号只能访问自己的记录。清除浏览器数据只移除本机记录，不会删除账号里的存档。</p><p>界面为原创展示设计；只借鉴参考站的轻量、逐步体验，不复制它的品牌和角色。图卡由站点所有者提供并确认具有对外展示授权。中文字卡沿用此前整理的四边字清晰重排版，不是原扫描图或经认证的官方版；<a href="words/source.json" target="_blank" rel="noopener">查看词表与素材来源</a>。</p>`);
+  else if (action === 'how') openInfo(`<p class="eyebrow">没有标准答案</p><h2>给一张图，留一点想象。</h2><ol><li>88 张牌背叠放在一起，每张露出一部分；悬停抬起后自己点选。</li><li>图卡不搭配字卡。图字探索先围绕图卡聊出感受、评价或故事，按自然探索及补充进度再进入字卡抽选，不按固定轮数。也可以点“只看图卡”跳过，或在对话里说明不想搭配字卡。用自己的话说联想与感受，不必强行把词用上。</li><li>两种玩法都从第一联想或感受和注意焦点开始。若说的是整个场景或多个焦点，不逐个追问对象特点。“不知道”或“想不出来”也算对当前问题的回答。当前话题聊不下去时，会回看你前面提过的线索；收尾时可以再补充一次。补充结束后，纯图卡显示抽下一张的入口，图字探索尚未配字时先问是否加字卡。两种模式均最多三张图，选过的位置不能再选。</li><li>本轮牌位不变，整轮结束后重新洗牌。想停时随时回顾、保存。</li></ol><p>图像没有固定牌意，不做人格计分。你可以直接在对话里纠正 AI，不需要给回答打分。</p><p><a href="skill/#L27" target="_blank" rel="noopener">查看当前引导规则 ↗</a></p>`);
+  else if (action === 'about') openInfo(`<p class="eyebrow">OH 卡交互展示版</p><h2>先体验它如何展开。</h2><p>本站提供“图字探索”和“图卡”两种玩法；图卡不搭配字卡。图字探索使用 88 张图卡及 88 张中文字卡清晰重排版。图卡与字卡分别独立洗牌，每张图先聊，形成线索并由你补充或修正后，再进入一张字卡的抽选；一轮最多三组，同类牌轮内不重复，可跳过或停用字卡。</p><p>发送后由 DeepSeek 根据实际图卡、当前对话和引导规则实时回应。</p><p>新一轮的卡牌与已发送对话自动保存：未登录时留在当前浏览器，登录后开始的轮次同步到私人账号，可跨设备查看。未发送草稿不会上传。旧的本机记录不会自动上传，可在账号里选择复制。AI 对话会把本轮已揭示图卡、字卡及其使用状态、对话及本人选择留作参考的非示例记忆交给 DeepSeek 处理。邮箱账号与账号内的记录由 Supabase 托管；各账号只能访问自己的记录。清除浏览器数据只移除本机记录，不会删除账号里的存档。</p><p>界面为原创展示设计；只借鉴参考站的轻量、逐步体验，不复制它的品牌和角色。图卡由站点所有者提供并确认具有对外展示授权。中文字卡沿用此前整理的四边字清晰重排版，不是原扫描图或经认证的官方版；<a href="words/source.json" target="_blank" rel="noopener">查看词表与素材来源</a>。</p>`);
 });
 function renderHomeEntry() {
   const active = state?.status === 'active';
@@ -801,7 +861,7 @@ window.addEventListener?.('oh-library-state',event=>{
     roundSaver.retry(libraryAccount.id);
   }
   refreshLibraryViews();renderArchiveStatus();if(currentView==='home')renderHomeCards();
-  if(!detail.loading)recoverLocalRound();
+  if(!detail.loading){recoverLocalRound();showRevisitPrompt();}
 });
 window.addEventListener?.('oh-library-import',()=>{
   if(!libraryAccount||libraryLoading||librarySaving)return;
@@ -826,9 +886,17 @@ document.addEventListener('click',async event=>{
 window.addEventListener?.('online',()=>{retryArchives();});
 window.addEventListener?.('pagehide',()=>{autosaveRound();});
 
-// Explicit same-card re-exploration: a new round, not a simulated random draw.
-const revisitValue=new URLSearchParams(window.location?.search||'').get('revisit');
-if(revisitValue&&/^(?:[1-9]|[1-7][0-9]|8[0-8])$/.test(revisitValue)){
- const card=Number(revisitValue);
- openInfo(`<p class="eyebrow">重新探索 · ${cardID(card)}</p><h2>再看一次这张图</h2><p>开启新一轮，原来的对话仍保留。</p><button class="primary" data-action="revisit-card" data-card="${card}">开始新的探索</button>`);
+// A same-card revisit starts a new round after account and round recovery.
+const revisitParams=new URLSearchParams(window.location?.search||'');
+const revisitValue=revisitParams.get('revisit');
+const revisitCard=/^(?:[1-9]|[1-7][0-9]|8[0-8])$/.test(revisitValue||'')?Number(revisitValue):null;
+const requestedRevisitMode=revisitParams.get('play_mode');
+let revisitPromptShown=false;
+function showRevisitPrompt() {
+  if(!revisitCard||revisitPromptShown||window.OHAccounts?.loading)return;
+  const mode=Object.hasOwn(PLAY_MODES,requestedRevisitMode)?requestedRevisitMode:state?.cards.length?playMode(state):selectedPlayMode;
+  const hasDraft=state?.status==='active'&&Object.values(state.drafts).some(v=>v.trim());
+  revisitPromptShown=true;
+  openInfo(`<p class="eyebrow">重新探索 · ${cardID(revisitCard)}</p><h2>再看一次这张图</h2><p>以「${PLAY_MODES[mode].name}」开启新一轮，原来的对话仍保留。${hasDraft?'未发送的草稿不会进入回顾；要保留它，可以先关闭并继续编辑。':''}</p><button class="primary" data-action="revisit-card" data-card="${revisitCard}" data-mode="${mode}">开始新的探索</button>`);
 }
+if(revisitCard&&!window.OHAccounts?.loading){recoverLocalRound();showRevisitPrompt();}

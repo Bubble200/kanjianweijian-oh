@@ -1,6 +1,5 @@
 /* Phone layout. Desktop styles and game state remain unchanged. */
 @media (max-width: 720px) {
-  :root { scroll-padding-bottom: 105px; }
   body { -webkit-text-size-adjust: 100%; }
   .site-header {
     height: 88px; width: 100%; max-width: 580px;
@@ -50,7 +49,7 @@
   .site-footer button { min-height: 44px; font-size: 12px; }
 
   /* One vertical reading surface. The composer gets the full phone width. */
-  .session-view { width: 100%; max-width: 620px; margin: 0 auto; padding: 5px 16px calc(115px + env(safe-area-inset-bottom)); }
+  .session-view { width: 100%; max-width: 620px; margin: 0 auto; padding: 5px 16px calc(30px + env(safe-area-inset-bottom)); }
   .session-heading { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; margin: 0 0 20px; }
   .session-heading .quiet-back { grid-column: 1; grid-row: 1; justify-self: start; padding: 0; min-height: 44px; font-size: 14px; gap: 5px; align-items: center; }
   .session-heading .end-button { grid-column: 2; grid-row: 1; min-height: 44px; font-size: 13px; }
@@ -82,7 +81,7 @@
   .conversation-pair .word-status .text-button { min-height: 44px; font-size: 13px; }
   .example-controls { margin-block: 24px 16px; padding: 12px; font-size: 13px; align-items: center; gap: 9px; }
   .small-primary { min-height: 44px; padding: 9px 13px; font-size: 14px; }
-  .composer { width: 100%; margin: 24px 0 0; border-radius: 12px; scroll-margin-block: 20px 110px; }
+  .composer { width: 100%; margin: 24px 0 0; border-radius: 12px; scroll-margin-block: 20px; }
   .composer textarea { min-height: 106px; font-size: 16px; padding: 15px 15px 6px; resize: none; }
   .composer-bottom { padding: 8px 11px 12px 15px; gap: 9px; }
   .composer-bottom > span { display: inline; font-size: 12px; }
@@ -90,18 +89,6 @@
   .reply-error, .reply-wait { font-size: 15px; }
   .next-image-step .primary { min-height: 48px; }
 
-  /* Always-available phone actions, rather than a tiny floating rail beside the input. */
-  .draw-rail { position: fixed; inset: auto 0 0; height: auto; padding: 10px max(16px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); transform: none; display: block; pointer-events: auto; z-index: 8; background: #f7f6eff5; border-top: 1px solid var(--line); box-shadow: 0 -5px 20px #293b3210; backdrop-filter: blur(12px); }
-  .rail-inner { position: static; width: 100%; max-width: 588px; margin: auto; display: flex; gap: 12px; align-items: center; }
-  .rail-kicker, .tiny-stack, .draw-rail #draw-note, .rail-line { display: none; }
-  .draw-next { flex: 1; min-width: 0; width: auto; min-height: 52px; padding: 12px 10px; display: flex; flex-direction: row; justify-content: center; gap: 8px; border-radius: 9px; box-shadow: none; }
-  .draw-next > svg { width: 19px; height: 19px; margin: 0; }
-  .draw-next strong { font-size: 14px; white-space: nowrap; }
-  .draw-next > span { font-size: 12px; white-space: nowrap; }
-  .rail-review { display: block; min-height: 52px; min-width: 62px; padding: 10px 4px; font-size: 14px; }
-  .rail-review-label { display: none; }
-  .mobile-only { display: inline; }
-  body:has(#message-input:focus) .draw-rail { display: none; }
   body:has(#session-view:not([hidden])) > .site-footer { display: none; }
 
   /* Two tactile stacks; swipe sideways to reach every card without 8px tap targets. */
@@ -168,7 +155,6 @@
   .review-actions > .secondary { flex: 1; font-size: 14px; }
   .plain-link { min-height: 44px; }
   .toast { bottom: max(18px, env(safe-area-inset-bottom)); width: max-content; max-width: calc(100vw - 32px); font-size: 14px; padding: 12px 17px; }
-  body:has(#session-view:not([hidden])) > .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 }
 @media (max-width: 360px) {
   .site-header { padding-inline: 12px; gap: 8px; }
@@ -182,9 +168,6 @@
   .home-bottom p { gap: 4px; }
   .home-bottom > i { width: 6px; }
   .composer-bottom > span { font-size: 11px; }
-  .draw-next { gap: 5px; padding-inline: 7px; }
-  .draw-next strong { font-size: 13px; }
-  .draw-next > span { font-size: 11px; }
 }
 /* Short landscape screens keep actions visible without reducing text to fit. */
 @media (max-width: 920px) and (max-height: 500px) {
@@ -229,7 +212,4 @@
   .mode-note { order: 4; margin: 10px 0 0; text-align: center; }
   .hero-actions { order: 5; margin-top: 16px; }
   .home-view .home-bottom { order: 6; }
-  .session-layout[data-play-mode=image_word] { display: block; }
-  body:has(.session-layout[data-play-mode=image_word]):has(#session-view:not([hidden])) .session-view { padding-bottom: 30px; }
-  body:has(.session-layout[data-play-mode=image_word]):has(#session-view:not([hidden])) > .toast { bottom: 18px; }
 }

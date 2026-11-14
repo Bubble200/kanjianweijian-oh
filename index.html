@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-  <meta name="description" content="看见未见 OH 卡：从一张图开始，用自己的话探索。">
+  <meta name="description" content="看见未见 OH 卡：从一张图开始，用自己的话探索。交互展示版。">
   <title>看见未见 · OH卡</title>
   <link rel="icon" type="image/svg+xml" href="assets/logo-oh-pages-15deg-v2.svg">
-  <link rel="stylesheet" href="styles.css?v=20261106-dusk">
-  <link rel="stylesheet" href="mobile.css?v=20261105-autosave">
+  <link rel="stylesheet" href="styles.css?v=20261112-foundation">
+  <link rel="stylesheet" href="mobile.css?v=20261112-foundation">
+  <link rel="stylesheet" href="report.css?v=20261110">
 <link rel="stylesheet" href="dusk/home.css?v=20261106-mobile-composition">
-</head>
+<script>window.OH_RUNTIME={liveAI:true};</script></head>
 <body data-dusk="on">
 <div class="dusk-backdrop" aria-hidden="true"></div>
 <!-- Independent image/word decks. Sent dialogue auto-archives privately; drafts and hidden decks are not uploaded. -->
@@ -49,9 +50,10 @@
    <div id="example-controls" class="example-controls" hidden><span>正在查看虚构对话示例</span><button class="small-primary" data-action="next-example">继续看示例 <svg><use href="#i-arrow"/></svg></button></div>
    <section id="word-step" class="word-step" aria-labelledby="word-title" hidden><header class="deck-heading"><div><p class="eyebrow">ANOTHER VIEW</p><h2 id="word-title">给这张图，抽一个词。</h2><p id="word-hint" class="deck-hint">88 张字卡，慢慢挑。</p></div></header><div class="deck-window" tabindex="0" role="region" aria-label="字卡牌叠，可左右滑动"><div id="word-grid" class="deck-grid" aria-label="叠放的全部 88 张字卡牌背"></div></div><footer class="deck-footer"><button class="text-button" data-action="skip-word">继续只看图卡</button><button id="word-confirm" class="primary deck-confirm" data-action="pick-word" type="button" hidden>选这张</button><strong id="word-count"></strong></footer></section>
    <form id="message-form" class="composer"><label for="message-input" class="sr-only">你的联想</label><textarea id="message-input" placeholder="写下你注意到的，或此刻的感受……" rows="2" maxlength="3000"></textarea><div class="composer-bottom"><span>随便说说，也可以慢慢想。</span><button type="submit" aria-label="发送你的联想">发送<svg><use href="#i-arrow"/></svg></button></div></form><div class="autosave-indicator"><span id="autosave-status" role="status"></span><button id="retry-autosave" class="plain-link" data-action="retry-save" hidden>重试保存</button><button id="export-autosave" class="plain-link" data-action="export-review" hidden>导出本轮</button></div>
- </section><aside class="draw-rail" aria-label="继续抽卡" hidden><div class="rail-inner"><div class="tiny-stack" aria-hidden="true"><i></i><i></i><i></i></div><p class="rail-kicker">让联想继续</p><button id="draw-next" class="draw-next" data-action="draw"><svg><use href="#i-plus"/></svg><strong>再抽一张</strong><span id="draw-target">第 2 / 3 张</span></button><p id="draw-note">不用等聊完，<br>想抽就可以抽。</p><span class="rail-line"></span><button class="text-button rail-review" data-action="review"><span class="rail-review-label">先回顾这一轮 ↗</span><span class="mobile-only">回顾 ↗</span></button></div></aside></div>
+ </section></div>
 </main>
 <main id="review-view" class="view review-view" hidden></main>
+<main id="report-view" class="view report-view" hidden></main>
 <footer class="site-footer"><span>看见未见 · 用你自己的话，看见此刻。</span><span>自由探索 <i></i> <button data-action="about">关于这个版本</button></span></footer>
 <dialog id="memory-dialog" class="drawer"><div class="drawer-head"><div><p class="eyebrow">YOUR NOTES</p><h2>记得你说过的话</h2></div><button class="icon-button" data-action="close-dialog" aria-label="关闭记忆"><svg><use href="#i-close"/></svg></button></div><div class="memory-tabs" role="tablist"><button role="tab" aria-selected="true" data-action="memory-tab" data-tab="round">本轮记录</button><button role="tab" aria-selected="false" data-action="memory-tab" data-tab="long">下次可参考</button><button role="tab" aria-selected="false" data-action="memory-tab" data-tab="saved">已保存的回顾</button></div><div id="memory-body" class="drawer-body"></div><p class="drawer-footer">记忆与回顾保存在这个浏览器，不跨设备同步。AI 对话会将本轮内容交给 DeepSeek 处理。</p></dialog>
 <dialog id="account-dialog" class="info-dialog account-dialog" aria-labelledby="account-title"><button class="icon-button dialog-close" data-action="close-dialog" aria-label="关闭账号"><svg><use href="#i-close"/></svg></button><div id="account-content"></div></dialog>
@@ -63,5 +65,5 @@
 <script type="module" src="account.bundle.js?v=20261105-autosave"></script>
 <script type="module" src="dusk/home.js?v=20261106"></script>
 <script id="oh-runtime">window.OH_RUNTIME={liveAI:true,apiBase:"https://arpyrhxpsgpuzxoxsodd.supabase.co/functions/v1/oh-backup"};</script>
-<script type="module" src="app.js?v=20261110-round-recovery"></script>
+<script type="module" src="app.js?v=20261114-topic-return"></script>
 </body></html>

@@ -31,3 +31,16 @@ test('fail closed for upstream HTML or missing visitor cookie',async()=>{
  assert.equal((await handle(req('status'),async()=>new Response('<html>blocked</html>'))).status,503);
  assert.equal((await handle(req('chat',{method:'POST',headers:{'x-oh-request':'1','content-type':'application/json'},body:'{}'}),async()=>new Response('{}'))).status,503);
 });
+
+test('relay reports to the fixed report endpoint under the existing visitor session',async()=>{
+ const calls=[];
+ const response=await handle(req('report',{method:'POST',headers:{'x-oh-request':'1','content-type':'application/json'},body:'{}'}),async(url,opts)=>{
+  calls.push(url);
+  if(url.endsWith('/session'))return new Response('{}',{headers:{'set-cookie':'__Host-oh_visitor=test.signed.token; Secure; HttpOnly'}});
+  assert.equal(opts.headers.cookie,'__Host-oh_visitor=test.signed.token');
+  return new Response('{"sections":{}}',{headers:{'content-type':'application/json'}});
+ });
+ assert.equal(response.status,200);
+ assert.equal(response.headers.get('set-cookie'),null);
+ assert.equal(calls.at(-1),'https://kanjianweijian-oh.yaoyutao666.chatgpt.site/api/report');
+});
