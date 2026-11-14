@@ -273,16 +273,21 @@ function revealWord(position) {
   state.wordPicks.push({card:state.activeCard,word_id:word.id,position,at:new Date().toISOString()});
   state.pairings[state.activeCard]={...state.pairings[state.activeCard],status:'paired',word_id:word.id};
   $('#word-step').hidden=true;
-  const question='加上这个词再看这张图，你有没有什么新的感受或联想？';
-  addTurn('assistant',question,{question,basis:'保留你抽字前对图卡的表达，再听这个词带来什么变化；不把字卡当作你的感受或特质。',ruleLine:55,ruleName:'个人赋义优先',origin:'图字联想引导'});
+  const question='加上这个词再看，有没有新的感受或联想？';
+  addTurn('assistant',formatAssistantReply(question+'\n\n（'+EXPLORATION_NOTICE+'）',question),{question,question_kind:'exploration',show_exploration_notice:true,basis:'保留你抽字前对图卡的表达，再听这个词带来什么变化；不把字卡当作你的感受或特质。',ruleLine:55,ruleName:'个人赋义优先',origin:'图字联想引导'});
   renderSession();
   // The revealed combination belongs to its place in the conversation; the original image stays above.
 }
 function skipWord() {
-  if (!state || state.pairings[state.activeCard]?.status!=='ready') return;
-  state.pairings[state.activeCard]={...state.pairings[state.activeCard],status:'skipped'};
+  const card=state?.activeCard;
+  if (state?.status!=='active' || state.pairings[card]?.status!=='ready' || state.replyRequests[card]) return;
+  state.pairings[card]={...state.pairings[card],status:'skipped'};
+  const third=state.cards.length===3;
   $('#word-step').hidden=true;
-  addTurn('assistant','好，我们继续只看图卡，刚才聊到的内容都还在。',{basis:'尊重你跳过字卡的选择，不重新开始对话。',ruleLine:292,ruleName:'允许跳过与暂停',origin:'玩法提示'});
+  addTurn('assistant',third?'这张就只看图，可以回顾这一轮了。':'这张就只看图，可以抽下一张了。',{
+    basis:'按你的选择跳过字卡，保留刚才的对话。',ruleLine:292,ruleName:'继续、补充与停止',origin:'玩法提示',
+    image_transition:{ready:!third},review_transition:{ready:third},
+  });
   renderSession();
 }
 function removeWord() {
@@ -415,8 +420,8 @@ const exampleTurns = [
     "question": "你说的“很专心”，在这张图里具体是什么样的？",
     "quote": "觉得他很专心，像是在跑自己的路。",
     "basis": "具体化参与者使用的形容词，不替他规定含义。",
-    "ruleLine": 84,
-    "ruleName": "找到个人化词义",
+    "ruleLine": 55,
+    "ruleName": "个人赋义优先",
     "origin": "虚构对话示例"
   },
   {
@@ -445,7 +450,7 @@ const exampleTurns = [
     "question": "下一次练习，你准备从什么开始？",
     "quote": "是的。我最近在学画画，想先练熟线条，不急着跟别人比作品。",
     "basis": "承接参与者自己提供的生活联系，再把想法落到具体行动。",
-    "ruleLine": 84,
+    "ruleLine": 55,
     "ruleName": "通过行动具体化",
     "origin": "虚构对话示例"
   },
@@ -786,7 +791,7 @@ document.addEventListener('click', event => {
     openInfo(savedReviewHTML(r));
     if(libraryAccount) $('#info-content').dataset.libraryOwner=libraryAccount.id;
   }
-  else if (action === 'how') openInfo(`<p class="eyebrow">没有标准答案</p><h2>给一张图，留一点想象。</h2><ol><li>88 张牌背叠放在一起，每张露出一部分；悬停抬起后自己点选。</li><li>图卡不搭配字卡。图字探索先围绕图卡聊出感受、评价或故事，按自然探索及补充进度再进入字卡抽选，不按固定轮数。也可以点“只看图卡”跳过，或在对话里说明不想搭配字卡。用自己的话说联想与感受，不必强行把词用上。</li><li>两种玩法都从第一联想或感受和注意焦点开始。若说的是整个场景或多个焦点，不逐个追问对象特点。“不知道”或“想不出来”也算对当前问题的回答。当前话题聊不下去时，会回看你前面提过的线索；收尾时可以再补充一次。补充结束后，纯图卡显示抽下一张的入口，图字探索尚未配字时先问是否加字卡。两种模式均最多三张图，选过的位置不能再选。</li><li>本轮牌位不变，整轮结束后重新洗牌。想停时随时回顾、保存。</li></ol><p>图像没有固定牌意，不做人格计分。你可以直接在对话里纠正 AI，不需要给回答打分。</p><p><a href="skill/#L27" target="_blank" rel="noopener">查看当前引导规则 ↗</a></p>`);
+  else if (action === 'how') openInfo(`<p class="eyebrow">没有标准答案</p><h2>给一张图，留一点想象。</h2><ol><li>88 张牌背叠放在一起，每张露出一部分；悬停抬起后自己点选。</li><li>图卡不搭配字卡。图字探索先围绕图卡聊出感受、评价或故事，按自然探索及补充进度再进入字卡抽选，不按固定轮数。也可以点“只看图卡”跳过，或在对话里说明不想搭配字卡。用自己的话说联想与感受，不必强行把词用上。</li><li>两种玩法都从第一联想或感受和注意焦点开始。若说的是整个场景或多个焦点，不逐个追问对象特点。“不知道”或“想不出来”也算对当前问题的回答。当前话题聊不下去时，会回看你前面提过的线索；收尾时可以再补充一次。补充结束后，纯图卡显示抽下一张的入口，图字探索尚未配字时直接展示字卡牌堆，可以自己抽一张，也可以跳过。两种模式均最多三张图，选过的位置不能再选。</li><li>本轮牌位不变，整轮结束后重新洗牌。想停时随时回顾、保存。</li></ol><p>图像没有固定牌意，不做人格计分。你可以直接在对话里纠正 AI，不需要给回答打分。</p><p><a href="skill/#L27" target="_blank" rel="noopener">查看当前引导规则 ↗</a></p>`);
   else if (action === 'about') openInfo(`<p class="eyebrow">OH 卡交互展示版</p><h2>先体验它如何展开。</h2><p>本站提供“图字探索”和“图卡”两种玩法；图卡不搭配字卡。图字探索使用 88 张图卡及 88 张中文字卡清晰重排版。图卡与字卡分别独立洗牌，每张图先聊，形成线索并由你补充或修正后，再进入一张字卡的抽选；一轮最多三组，同类牌轮内不重复，可跳过或停用字卡。</p><p>发送后由 DeepSeek 根据实际图卡、当前对话和引导规则实时回应。</p><p>新一轮的卡牌与已发送对话自动保存：未登录时留在当前浏览器，登录后开始的轮次同步到私人账号，可跨设备查看。未发送草稿不会上传。旧的本机记录不会自动上传，可在账号里选择复制。AI 对话会把本轮已揭示图卡、字卡及其使用状态、对话及本人选择留作参考的非示例记忆交给 DeepSeek 处理。邮箱账号与账号内的记录由 Supabase 托管；各账号只能访问自己的记录。清除浏览器数据只移除本机记录，不会删除账号里的存档。</p><p>界面为原创展示设计；只借鉴参考站的轻量、逐步体验，不复制它的品牌和角色。图卡由站点所有者提供并确认具有对外展示授权。中文字卡沿用此前整理的四边字清晰重排版，不是原扫描图或经认证的官方版；<a href="words/source.json" target="_blank" rel="noopener">查看词表与素材来源</a>。</p>`);
 });
 function renderHomeEntry() {
